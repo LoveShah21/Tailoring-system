@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit Feedback{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2><i class="bi bi-star"></i> Submit Feedback</h2>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body p-4">
+                {% if order %}
+                <div class="alert alert-info">
+                    Submitting feedback for order <strong>{{ order.order_number }}</strong>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="order" value="{{ order.pk }}">
+
+                    <div class="mb-3">
+                        <label class="form-label">Rating (1-5 stars) *</label>
+                        {{ form.rating }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Your Feedback</label>
+                        {{ form.comment }}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Submit Feedback
+                    </button>
+                </form>
+                {% else %}
+                <div class="alert alert-warning">
+                    Please select a delivered order to submit feedback.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

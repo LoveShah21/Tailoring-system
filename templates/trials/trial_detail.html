@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Trial Details{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'trials:trial_list' %}"><i
+            class="bi bi-calendar-check"></i> Trials</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'trials:trial_list' %}">Trials</a></li>
+            <li class="breadcrumb-item active">Trial #{{ trial.pk }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between">
+                <h5 class="mb-0"><i class="bi bi-calendar-check"></i> Trial Details</h5>
+                <span
+                    class="badge bg-{% if trial.status == 'scheduled' %}warning{% elif trial.status == 'completed' %}success{% else %}secondary{% endif %}">
+                    {{ trial.status|title }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Order:</strong> <a href="{% url 'orders:order_detail' trial.order.pk %}">{{
+                                trial.order.order_number }}</a></p>
+                        <p><strong>Customer:</strong> {{ trial.order.customer.user.get_full_name }}</p>
+                        <p><strong>Garment:</strong> {{ trial.order.garment_type.name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Scheduled Date:</strong> {{ trial.scheduled_date|date:"F d, Y" }}</p>
+                        <p><strong>Scheduled Time:</strong> {{ trial.scheduled_time|time:"H:i"|default:"Not set" }}</p>
+                        {% if trial.completed_date %}
+                        <p><strong>Completed:</strong> {{ trial.completed_date|date:"F d, Y" }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if trial.notes %}
+                <div class="alert alert-info mt-3">
+                    <strong>Notes:</strong> {{ trial.notes }}
+                </div>
+                {% endif %}
+                {% if trial.outcome_notes %}
+                <div class="alert alert-success mt-3">
+                    <strong>Outcome:</strong> {{ trial.outcome_notes }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Alterations -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-tools"></i> Alterations Required</h5>
+            </div>
+            <div class="card-body">
+                {% if alterations %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Priority</th>
+                                <th>Est. Hours</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in alterations %}
+                            <tr>
+                                <td>{{ a.description }}</td>
+                                <td>
+                                    {% if a.priority == 'high' %}
+                                    <span class="badge bg-danger">High</span>
+                                    {% elif a.priority == 'medium' %}
+                                    <span class="badge bg-warning">Medium</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Low</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ a.estimated_hours|default:"-" }}h</td>
+                                <td>
+                                    {% if a.is_completed %}
+                                    <span class="badge bg-success">Complete</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if not a.is_completed %}
+                                    <form method="post" action="{% url 'trials:complete_alteration' a.pk %}"
+                                        class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="bi bi-check"></i> Complete
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No alterations recorded.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        {% if trial.status == 'scheduled' %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0">Update Trial</h6>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'trials:trial_update' trial.pk %}" class="btn btn-primary w-100 mb-2">
+                    <i class="bi bi-pencil"></i> Update Status
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h6 class="mb-0"><i class="bi bi-plus"></i> Add Alteration</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'trials:add_alteration' trial.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ alteration_form.description }}
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            {{ alteration_form.priority }}
+                        </div>
+                        <div class="col-6 mb-3">
+                            {{ alteration_form.estimated_hours }}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="bi bi-plus"></i> Add Alteration
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

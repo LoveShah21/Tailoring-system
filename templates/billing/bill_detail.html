@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Bill Details{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'billing:bill_list' %}"><i class="bi bi-receipt"></i>
+        Bills</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'billing:bill_list' %}">Bills</a></li>
+            <li class="breadcrumb-item active">{{ bill.order.order_number }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-receipt"></i> Bill for {{ bill.order.order_number }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <p><strong>Customer:</strong> {{ bill.order.customer.user.get_full_name }}</p>
+                        <p><strong>Phone:</strong> {{ bill.order.customer.phone_number }}</p>
+                        <p><strong>Garment:</strong> {{ bill.order.garment_type.name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Order Date:</strong> {{ bill.order.created_at|date:"F d, Y" }}</p>
+                        <p><strong>Bill Date:</strong> {{ bill.created_at|date:"F d, Y" }}</p>
+                    </div>
+                </div>
+
+                <h6>Cost Breakdown</h6>
+                <table class="table table-bordered">
+                    <tr>
+                        <td>Base Price ({{ bill.order.garment_type.name }})</td>
+                        <td class="text-end">₹{{ bill.base_amount }}</td>
+                    </tr>
+                    {% for wt in work_types %}
+                    <tr>
+                        <td>{{ wt.work_type.name }}</td>
+                        <td class="text-end">₹{{ wt.extra_charge }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td>Work Types Total</td>
+                        <td class="text-end">₹{{ bill.work_type_amount }}</td>
+                    </tr>
+                    {% if bill.urgency_amount > 0 %}
+                    <tr>
+                        <td>Urgency Surcharge</td>
+                        <td class="text-end">₹{{ bill.urgency_amount }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <td>Material Cost</td>
+                        <td class="text-end">₹{{ bill.material_cost }}</td>
+                    </tr>
+                    {% if bill.discount_amount > 0 %}
+                    <tr class="text-success">
+                        <td>Discount</td>
+                        <td class="text-end">-₹{{ bill.discount_amount }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr class="table-dark fw-bold">
+                        <td>Final Amount</td>
+                        <td class="text-end">₹{{ bill.final_amount }}</td>
+                    </tr>
+                    <tr class="table-success">
+                        <td>Amount Paid</td>
+                        <td class="text-end">₹{{ bill.amount_paid }}</td>
+                    </tr>
+                    <tr class="{% if bill.balance_due > 0 %}table-danger{% endif %}">
+                        <td>Balance Due</td>
+                        <td class="text-end">₹{{ bill.balance_due }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Invoices -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <h5 class="mb-0"><i class="bi bi-file-text"></i> Invoices</h5>
+                <form method="post" action="{% url 'billing:generate_invoice' bill.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus"></i> Generate Invoice
+                    </button>
+                </form>
+            </div>
+            <div class="card-body">
+                {% if invoices %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inv in invoices %}
+                        <tr>
+                            <td>{{ inv.invoice_number }}</td>
+                            <td>₹{{ inv.amount }}</td>
+                            <td>{{ inv.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'billing:download_pdf' inv.pk %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-file-pdf"></i> PDF
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted">No invoices generated yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'orders:order_detail' bill.order.pk %}" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="bi bi-bag"></i> View Order
+                </a>
+                {% if bill.balance_due > 0 %}
+                <a href="#" class="btn btn-success w-100">
+                    <i class="bi bi-credit-card"></i> Record Payment
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Customer Dashboard - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link active" href="{% url 'dashboard:home' %}"><i class="bi bi-house"></i>
+        Dashboard</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="bi bi-house"></i> Welcome, {{ user.get_full_name }}!</h2>
+        <p class="text-muted">Track your orders and manage your profile.</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>My Orders</h6>
+                        <h2 class="mb-0">--</h2>
+                    </div>
+                    <i class="bi bi-bag display-4 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Completed</h6>
+                        <h2 class="mb-0">--</h2>
+                    </div>
+                    <i class="bi bi-check-circle display-4 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>In Progress</h6>
+                        <h2 class="mb-0">--</h2>
+                    </div>
+                    <i class="bi bi-hourglass-split display-4 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Orders</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted text-center py-4">No orders yet. Contact us to place your first order!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'users:profile' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-person"></i> My Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

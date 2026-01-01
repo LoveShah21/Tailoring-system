@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Bills - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'billing:bill_list' %}"><i class="bi bi-receipt"></i>
+        Bills</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'billing:invoice_list' %}"><i class="bi bi-file-text"></i>
+        Invoices</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2><i class="bi bi-receipt"></i> Bills</h2>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="search" class="form-control" placeholder="Search order #, customer..."
+                    value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="unpaid" {% if selected_status=='unpaid' %}selected{% endif %}>Unpaid</option>
+                    <option value="paid" {% if selected_status=='paid' %}selected{% endif %}>Paid</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-outline-primary">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Customer</th>
+                        <th>Total</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bill in bills %}
+                    <tr>
+                        <td><a href="{% url 'orders:order_detail' bill.order.pk %}">{{ bill.order.order_number }}</a>
+                        </td>
+                        <td>{{ bill.order.customer.user.get_full_name }}</td>
+                        <td>₹{{ bill.final_amount }}</td>
+                        <td class="text-success">₹{{ bill.amount_paid }}</td>
+                        <td class="{% if bill.balance_due > 0 %}text-danger{% endif %}">₹{{ bill.balance_due }}</td>
+                        <td>{{ bill.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'billing:bill_detail' bill.pk %}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">No bills found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

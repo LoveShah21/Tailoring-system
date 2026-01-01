@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Measurement Templates - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'measurements:template_list' %}"><i
+            class="bi bi-rulers"></i> Templates</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'measurements:set_list' %}"><i
+            class="bi bi-person-lines-fill"></i> Measurements</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2><i class="bi bi-rulers"></i> Measurement Templates</h2>
+    <p class="text-muted">Templates define which measurements to collect for each garment type.</p>
+</div>
+
+{% for garment in garment_types %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-tag"></i> {{ garment.name }}</h5>
+    </div>
+    <div class="card-body">
+        {% with garment_templates=templates|dictsort:"measurement_name" %}
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Measurement</th>
+                        <th>Unit</th>
+                        <th>Required</th>
+                        <th>Min</th>
+                        <th>Max</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in templates %}
+                    {% if t.garment_type_id == garment.pk %}
+                    <tr>
+                        <td>{{ t.measurement_name }}</td>
+                        <td>{{ t.unit }}</td>
+                        <td>{% if t.is_required %}<span class="badge bg-danger">Required</span>{% else %}<span
+                                class="badge bg-secondary">Optional</span>{% endif %}</td>
+                        <td>{{ t.min_value|default:"-" }}</td>
+                        <td>{{ t.max_value|default:"-" }}</td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endwith %}
+    </div>
+</div>
+{% empty %}
+<div class="alert alert-info">
+    No measurement templates defined yet.
+</div>
+{% endfor %}
+{% endblock %}

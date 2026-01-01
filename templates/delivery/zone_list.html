@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Delivery Zones{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'delivery:delivery_list' %}"><i class="bi bi-truck"></i>
+        Deliveries</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'delivery:zone_list' %}"><i class="bi bi-geo-alt"></i>
+        Zones</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2><i class="bi bi-geo-alt"></i> Delivery Zones</h2>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Zone Name</th>
+                        <th>Description</th>
+                        <th>Delivery Days</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for zone in zones %}
+                    <tr>
+                        <td>{{ zone.name }}</td>
+                        <td>{{ zone.description|default:"-" }}</td>
+                        <td>{{ zone.base_delivery_days }} days</td>
+                        <td>
+                            {% if zone.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-muted">No zones defined.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

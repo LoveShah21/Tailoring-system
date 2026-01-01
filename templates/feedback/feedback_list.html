@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Feedback - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'feedback:feedback_list' %}"><i class="bi bi-star"></i>
+        Feedback</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2><i class="bi bi-star"></i> Customer Feedback</h2>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h6>Pending Review</h6>
+                <h2 class="mb-0">{{ pending_count }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="pending" {% if selected_status=='pending' %}selected{% endif %}>Pending</option>
+                    <option value="approved" {% if selected_status=='approved' %}selected{% endif %}>Approved</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Order</th>
+                        <th>Customer</th>
+                        <th>Rating</th>
+                        <th>Comment</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fb in feedbacks %}
+                    <tr>
+                        <td>{{ fb.created_at|date:"M d, Y" }}</td>
+                        <td><a href="{% url 'orders:order_detail' fb.order.pk %}">{{ fb.order.order_number }}</a></td>
+                        <td>{{ fb.order.customer.user.get_full_name }}</td>
+                        <td>
+                            {% for i in "12345" %}
+                            {% if forloop.counter <= fb.rating %} <i class="bi bi-star-fill text-warning"></i>
+                                {% else %}
+                                <i class="bi bi-star text-muted"></i>
+                                {% endif %}
+                                {% endfor %}
+                        </td>
+                        <td>{{ fb.comment|truncatechars:50 }}</td>
+                        <td>
+                            {% if fb.is_approved %}
+                            <span class="badge bg-success">Approved</span>
+                            {% else %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not fb.is_approved %}
+                            <form method="post" action="{% url 'feedback:approve' fb.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success" title="Approve">
+                                    <i class="bi bi-check"></i>
+                                </button>
+                            </form>
+                            {% else %}
+                            <form method="post" action="{% url 'feedback:reject' fb.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger" title="Reject">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">No feedback received.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

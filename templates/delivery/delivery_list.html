@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Deliveries - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'delivery:delivery_list' %}"><i class="bi bi-truck"></i>
+        Deliveries</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'delivery:zone_list' %}"><i class="bi bi-geo-alt"></i> Zones</a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-truck"></i> Deliveries</h2>
+    <a href="{% url 'delivery:delivery_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Schedule Delivery
+    </a>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h6>Pending</h6>
+                <h2 class="mb-0">{{ pending_count }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="SCHEDULED" {% if selected_status=="SCHEDULED" %}selected{% endif %}>Scheduled
+                    </option>
+                    <option value="IN_TRANSIT" {% if selected_status=="IN_TRANSIT" %}selected{% endif %}>In Transit
+                    </option>
+                    <option value="DELIVERED" {% if selected_status=="DELIVERED" %}selected{% endif %}>Delivered
+                    </option>
+                    <option value="FAILED" {% if selected_status=="FAILED" %}selected{% endif %}>Failed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Customer</th>
+                        <th>Zone</th>
+                        <th>Scheduled</th>
+                        <th>Assigned To</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in deliveries %}
+                    <tr>
+                        <td><a href="{% url 'orders:order_detail' d.order.pk %}">{{ d.order.order_number }}</a></td>
+                        <td>{{ d.order.customer.user.get_full_name }}</td>
+                        <td>{{ d.delivery_zone.name|default:"-" }}</td>
+                        <td>{{ d.scheduled_delivery_date|date:"M d, Y" }}</td>
+                        <td>{{ d.delivery_staff.get_full_name|default:"Unassigned" }}</td>
+                        <td>
+                            {% if d.delivery_status == 'SCHEDULED' %}
+                            <span class="badge bg-warning">Scheduled</span>
+                            {% elif d.delivery_status == 'IN_TRANSIT' %}
+                            <span class="badge bg-info">In Transit</span>
+                            {% elif d.delivery_status == 'DELIVERED' %}
+                            <span class="badge bg-success">Delivered</span>
+                            {% else %}
+                            <span class="badge bg-danger">{{ d.delivery_status|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'delivery:delivery_detail' d.pk %}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'delivery:delivery_update' d.pk %}" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">No deliveries scheduled.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

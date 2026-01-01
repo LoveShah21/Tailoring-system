@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'catalog:garment_list' %}"><i class="bi bi-tags"></i>
+        Garments</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'catalog:work_type_list' %}"><i class="bi bi-hammer"></i> Work
+        Types</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'catalog:garment_list' %}">Garment Types</a></li>
+            <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+    </nav>
+    <h2><i class="bi bi-{% if edit_garment %}pencil{% else %}plus-lg{% endif %}"></i> {{ title }}</h2>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="id_name" class="form-label">Garment Name *</label>
+                        {{ form.name }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">Description</label>
+                        {{ form.description }}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="id_base_price" class="form-label">Base Price (₹) *</label>
+                            {{ form.base_price }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_fabric_requirement_meters" class="form-label">Fabric Required (m) *</label>
+                            {{ form.fabric_requirement_meters }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_stitching_days_estimate" class="form-label">Est. Days</label>
+                            {{ form.stitching_days_estimate }}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="id_is_active">
+                                Active (visible on orders)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> {% if edit_garment %}Update{% else %}Create{% endif %}
+                            Garment Type
+                        </button>
+                        <a href="{% url 'catalog:garment_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-lg"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

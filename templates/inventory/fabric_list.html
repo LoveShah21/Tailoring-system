@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventory - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'inventory:fabric_list' %}"><i class="bi bi-box-seam"></i>
+        Inventory</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'inventory:alert_list' %}"><i
+            class="bi bi-exclamation-triangle"></i> Alerts</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-box-seam"></i> Fabric Inventory</h2>
+    <a href="{% url 'inventory:fabric_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Add Fabric
+    </a>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h6>Total Fabrics</h6>
+                <h2 class="mb-0">{{ total_fabrics }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h6>Low Stock</h6>
+                <h2 class="mb-0">{{ low_stock_count }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h6>Total Value</h6>
+                <h2 class="mb-0">₹{{ total_value|floatformat:0|default:"0" }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="search" class="form-control" placeholder="Search by name, color, pattern..."
+                    value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <div class="form-check mt-2">
+                    <input type="checkbox" name="low_stock" value="1" class="form-check-input" id="lowStockFilter" {% if
+                        low_stock_filter=='1' %}checked{% endif %}>
+                    <label class="form-check-label" for="lowStockFilter">Low Stock Only</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+                <a href="{% url 'inventory:fabric_list' %}" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Fabrics Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Color</th>
+                        <th>Pattern</th>
+                        <th>Stock (m)</th>
+                        <th>Cost/m</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fabric in fabrics %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'inventory:fabric_detail' fabric.pk %}">
+                                {{ fabric.name }}
+                            </a>
+                        </td>
+                        <td>{{ fabric.color|default:"-" }}</td>
+                        <td>{{ fabric.pattern|default:"-" }}</td>
+                        <td>
+                            {{ fabric.quantity_in_stock }}
+                            {% if fabric.quantity_in_stock <= fabric.reorder_threshold %} <i
+                                class="bi bi-exclamation-triangle text-warning"></i>
+                                {% endif %}
+                        </td>
+                        <td>₹{{ fabric.cost_per_meter }}</td>
+                        <td>
+                            {% if fabric.quantity_in_stock <= fabric.reorder_threshold %} <span
+                                class="badge bg-warning">Low Stock</span>
+                                {% else %}
+                                <span class="badge bg-success">In Stock</span>
+                                {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'inventory:fabric_detail' fabric.pk %}" class="btn btn-outline-info"
+                                    title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'inventory:fabric_edit' fabric.pk %}" class="btn btn-outline-warning"
+                                    title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox display-6 d-block mb-2"></i>
+                            No fabrics in inventory.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if low_stock_filter %}&low_stock={{ low_stock_filter }}{% endif %}">Previous</a>
+                </li>
+                {% endif %}
+                <li class="page-item disabled">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if low_stock_filter %}&low_stock={{ low_stock_filter }}{% endif %}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

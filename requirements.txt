@@ -1,0 +1,26 @@
+# Django Core
+Django>=5.0,<6.0
+mysqlclient>=2.2.0
+
+# Environment & Configuration
+python-dotenv>=1.0.0
+python-decouple>=3.8
+
+# Payments
+razorpay>=1.4.1
+
+# PDF Generation
+reportlab>=4.0.0
+xhtml2pdf>=0.2.11
+
+# Image Processing
+Pillow>=10.0.0
+
+# Security
+django-csp>=3.8
+
+# Development & Testing
+django-debug-toolbar>=4.2.0
+
+# Date/Time handling
+python-dateutil>=2.8.2

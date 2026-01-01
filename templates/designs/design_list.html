@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Designs - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'designs:design_list' %}"><i class="bi bi-brush"></i>
+        Designs</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-brush"></i> Designs</h2>
+    <a href="{% url 'designs:design_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Upload Design
+    </a>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h6>Pending Approval</h6>
+                <h2 class="mb-0">{{ pending_count }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="pending" {% if selected_status=='pending' %}selected{% endif %}>Pending</option>
+                    <option value="approved" {% if selected_status=='approved' %}selected{% endif %}>Approved</option>
+                    <option value="rejected" {% if selected_status=='rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    {% for design in designs %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            {% if design.image %}
+            <img src="{{ design.image.url }}" class="card-img-top" alt="{{ design.design_name }}"
+                style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="bi bi-image text-muted display-4"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ design.design_name }}</h5>
+                <p class="card-text text-muted">{{ design.customer.user.get_full_name }}</p>
+                <p class="card-text small">{{ design.description|truncatechars:100 }}</p>
+            </div>
+            <div class="card-footer bg-transparent d-flex justify-content-between">
+                <span
+                    class="badge bg-{% if design.status == 'approved' %}success{% elif design.status == 'rejected' %}danger{% else %}warning{% endif %}">
+                    {{ design.status|title }}
+                </span>
+                <a href="{% url 'designs:design_detail' design.pk %}" class="btn btn-sm btn-outline-info">
+                    <i class="bi bi-eye"></i> View
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-brush display-1"></i>
+            <h4 class="mt-3">No Designs</h4>
+            <p>Upload your first design to get started.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

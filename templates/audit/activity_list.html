@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Activity Log{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'audit:activity_list' %}"><i
+            class="bi bi-journal-text"></i> Audit Log</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2><i class="bi bi-journal-text"></i> Activity Log</h2>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="action" class="form-select">
+                    <option value="">All Actions</option>
+                    <option value="CREATE" {% if selected_action=='CREATE' %}selected{% endif %}>Create</option>
+                    <option value="UPDATE" {% if selected_action=='UPDATE' %}selected{% endif %}>Update</option>
+                    <option value="DELETE" {% if selected_action=='DELETE' %}selected{% endif %}>Delete</option>
+                    <option value="LOGIN" {% if selected_action=='LOGIN' %}selected{% endif %}>Login</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Resource</th>
+                        <th>Description</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.created_at|date:"M d, H:i" }}</td>
+                        <td>{{ log.user.username|default:"-" }}</td>
+                        <td><span class="badge bg-info">{{ log.action }}</span></td>
+                        <td>{{ log.resource }}</td>
+                        <td>{{ log.description|truncatechars:50 }}</td>
+                        <td><small>{{ log.ip_address|default:"-" }}</small></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No activity logged.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

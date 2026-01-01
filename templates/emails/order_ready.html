@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: #198754;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✂️ Your Order is Ready!</h1>
+        </div>
+        <div class="content">
+            <h2>Great News!</h2>
+            <p>Dear {{ customer_name }},</p>
+            <p>Your order <strong>{{ order_number }}</strong> is now ready for pickup or delivery.</p>
+
+            <p><strong>Garment:</strong> {{ garment_type }}</p>
+
+            <p>Please visit our store or wait for the scheduled delivery.</p>
+            <p>Thank you for choosing us!</p>
+        </div>
+        <div class="footer">
+            <p>© 2026 Tailoring Management System. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'customers:customer_list' %}"><i class="bi bi-people"></i>
+        Customers</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'orders:order_list' %}"><i class="bi bi-cart"></i>
+        Orders</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'orders:order_list' %}">Orders</a></li>
+            <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+    </nav>
+    <h2><i class="bi bi-{% if edit_order %}pencil{% else %}plus-lg{% endif %}"></i> {{ title }}</h2>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if not edit_order %}
+                    <h5 class="mb-3">Customer & Garment</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_customer" class="form-label">Customer *</label>
+                            {{ form.customer }}
+                            {% if form.customer.errors %}
+                            <div class="text-danger small">{{ form.customer.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_garment_type" class="form-label">Garment Type *</label>
+                            {{ form.garment_type }}
+                            {% if form.garment_type.errors %}
+                            <div class="text-danger small">{{ form.garment_type.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Work Types (Optional)</label>
+                        <div class="row">
+                            {% for checkbox in form.work_types %}
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ checkbox.tag }}
+                                    <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                                        {{ checkbox.choice_label }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    {% endif %}
+
+                    <h5 class="mb-3">Order Details</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_expected_delivery_date" class="form-label">Expected Delivery Date *</label>
+                            {{ form.expected_delivery_date }}
+                            {% if form.expected_delivery_date.errors %}
+                            <div class="text-danger small">{{ form.expected_delivery_date.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="form-check mt-2">
+                                {{ form.is_urgent }}
+                                <label class="form-check-label" for="id_is_urgent">
+                                    <strong>Urgent Order</strong> (20% surcharge)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="id_special_instructions" class="form-label">Special Instructions</label>
+                        {{ form.special_instructions }}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> {% if edit_order %}Update{% else %}Create{% endif %} Order
+                        </button>
+                        <a href="{% url 'orders:order_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-lg"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

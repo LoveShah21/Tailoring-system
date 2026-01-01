@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Delivery Dashboard - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link active" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="bi bi-truck"></i> Delivery Dashboard</h2>
+        <p class="text-muted">Manage deliveries and track scheduled pickups.</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar-check display-4"></i>
+                <h6 class="mt-2">Today's Deliveries</h6>
+                <h2>--</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-warning h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-hourglass display-4"></i>
+                <h6 class="mt-2">Pending</h6>
+                <h2>--</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-check2-all display-4"></i>
+                <h6 class="mt-2">Completed</h6>
+                <h2>--</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Scheduled Deliveries</h5>
+    </div>
+    <div class="card-body">
+        <p class="text-muted text-center py-4">No deliveries scheduled.</p>
+    </div>
+</div>
+{% endblock %}

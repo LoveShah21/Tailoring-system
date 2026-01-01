@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: #0dcaf0;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Trial Scheduled</h1>
+        </div>
+        <div class="content">
+            <h2>Trial Appointment</h2>
+            <p>Dear {{ customer_name }},</p>
+            <p>Your trial fitting has been scheduled for your order.</p>
+
+            <table style="width: 100%; margin: 20px 0;">
+                <tr>
+                    <td><strong>Order Number:</strong></td>
+                    <td>{{ order_number }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Date:</strong></td>
+                    <td>{{ trial_date }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Time:</strong></td>
+                    <td>{{ trial_time }}</td>
+                </tr>
+            </table>
+
+            <p>Please visit our store at the scheduled time.</p>
+        </div>
+        <div class="footer">
+            <p>© 2026 Tailoring Management System. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+
+</html>

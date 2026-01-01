@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Record Measurements - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'measurements:template_list' %}"><i class="bi bi-rulers"></i>
+        Templates</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'measurements:set_list' %}"><i
+            class="bi bi-person-lines-fill"></i> Measurements</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'measurements:set_list' %}">Measurements</a></li>
+            <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+    </nav>
+    <h2><i class="bi bi-plus-lg"></i> {{ title }}</h2>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body p-4">
+                {% if not templates %}
+                <!-- Step 1: Select Customer and Garment Type -->
+                <form method="get">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Customer *</label>
+                            <select name="customer" class="form-select" required>
+                                <option value="">Select Customer</option>
+                                {% for c in customers %}
+                                <option value="{{ c.pk }}" {% if selected_customer==c.pk|stringformat:"s" %}selected{%
+                                    endif %}>
+                                    {{ c.user.get_full_name }} ({{ c.phone_number }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Garment Type *</label>
+                            <select name="garment_type" class="form-select" required>
+                                <option value="">Select Garment Type</option>
+                                {% for g in garment_types %}
+                                <option value="{{ g.pk }}" {% if selected_garment==g.pk|stringformat:"s" %}selected{%
+                                    endif %}>
+                                    {{ g.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-arrow-right"></i> Continue
+                    </button>
+                </form>
+                {% else %}
+                <!-- Step 2: Enter Measurements -->
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="customer" value="{{ customer.pk }}">
+                    <input type="hidden" name="garment_type" value="{{ garment_type.pk }}">
+
+                    <div class="alert alert-info">
+                        Recording measurements for <strong>{{ customer.user.get_full_name }}</strong> - <strong>{{
+                            garment_type.name }}</strong>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Set Name (optional)</label>
+                        <input type="text" name="set_name" class="form-control" placeholder="e.g., Standard, Slim Fit">
+                    </div>
+
+                    <h5 class="mt-4 mb-3">Enter Measurements</h5>
+
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Measurement</th>
+                                    <th>Value</th>
+                                    <th>Unit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for t in templates %}
+                                <tr>
+                                    <td>
+                                        {{ t.measurement_name }}
+                                        {% if t.is_required %}<span class="text-danger">*</span>{% endif %}
+                                    </td>
+                                    <td>
+                                        <input type="number" name="measurement_{{ t.id }}" class="form-control"
+                                            step="0.1" {% if t.min_value %}min="{{ t.min_value }}" {% endif %} {% if
+                                            t.max_value %}max="{{ t.max_value }}" {% endif %} {% if t.is_required
+                                            %}required{% endif %}>
+                                    </td>
+                                    <td>{{ t.unit }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> Save Measurements
+                        </button>
+                        <a href="{% url 'measurements:set_list' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

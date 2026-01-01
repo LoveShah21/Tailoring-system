@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: #6f42c1;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚚 Delivery Scheduled</h1>
+        </div>
+        <div class="content">
+            <h2>Your Order is On Its Way!</h2>
+            <p>Dear {{ customer_name }},</p>
+            <p>Your order has been scheduled for delivery.</p>
+
+            <table style="width: 100%; margin: 20px 0;">
+                <tr>
+                    <td><strong>Order Number:</strong></td>
+                    <td>{{ order_number }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Delivery Date:</strong></td>
+                    <td>{{ delivery_date }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Time Slot:</strong></td>
+                    <td>{{ time_slot }}</td>
+                </tr>
+            </table>
+
+            <p>Please ensure someone is available to receive the delivery.</p>
+        </div>
+        <div class="footer">
+            <p>© 2026 Tailoring Management System. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Details{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'payments:payment_list' %}"><i
+            class="bi bi-credit-card"></i> Payments</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'payments:payment_list' %}">Payments</a></li>
+            <li class="breadcrumb-item active">Payment #{{ payment.pk }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <h5 class="mb-0"><i class="bi bi-credit-card"></i> Payment Details</h5>
+                <span class="badge bg-{% if payment.status == 'captured' %}success{% else %}warning{% endif %}">
+                    {{ payment.status|title }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Amount:</strong> ₹{{ payment.amount }}</p>
+                        <p><strong>Payment Mode:</strong> {{ payment.payment_mode.mode_name|default:"Online" }}</p>
+                        <p><strong>Date:</strong> {{ payment.created_at|date:"F d, Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        {% if payment.bill %}
+                        <p><strong>Order:</strong> <a href="{% url 'orders:order_detail' payment.bill.order.pk %}">{{
+                                payment.bill.order.order_number }}</a></p>
+                        <p><strong>Customer:</strong> {{ payment.bill.order.customer.user.get_full_name }}</p>
+                        {% endif %}
+                        {% if payment.razorpay_payment_id %}
+                        <p><strong>Razorpay ID:</strong> {{ payment.razorpay_payment_id }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if payment.notes %}
+                <div class="alert alert-info mt-3">
+                    <strong>Notes:</strong> {{ payment.notes }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

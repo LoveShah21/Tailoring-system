@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Measurements - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'measurements:template_list' %}"><i class="bi bi-rulers"></i>
+        Templates</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'measurements:set_list' %}"><i
+            class="bi bi-person-lines-fill"></i> Measurements</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'measurements:set_list' %}">Measurements</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'measurements:set_detail' measurement_set.pk %}">{{
+                    measurement_set.set_name }}</a></li>
+            <li class="breadcrumb-item active">Edit</li>
+        </ol>
+    </nav>
+    <h2><i class="bi bi-pencil"></i> {{ title }}</h2>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="alert alert-info">
+                    Editing measurements for <strong>{{ measurement_set.customer.user.get_full_name }}</strong> -
+                    <strong>{{ measurement_set.garment_type.name }}</strong>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Measurement</th>
+                                    <th>Value</th>
+                                    <th>Unit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for t in templates %}
+                                <tr>
+                                    <td>
+                                        {{ t.measurement_name }}
+                                        {% if t.is_required %}<span class="text-danger">*</span>{% endif %}
+                                    </td>
+                                    <td>
+                                        <input type="number" name="measurement_{{ t.id }}" class="form-control"
+                                            step="0.1" {% if t.min_value %}min="{{ t.min_value }}" {% endif %} {% if
+                                            t.max_value %}max="{{ t.max_value }}" {% endif %}
+                                            value="{{ existing_values|default_if_none:'' }}" {% if t.is_required
+                                            %}required{% endif %}>
+                                    </td>
+                                    <td>{{ t.unit }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> Update Measurements
+                        </button>
+                        <a href="{% url 'measurements:set_detail' measurement_set.pk %}"
+                            class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

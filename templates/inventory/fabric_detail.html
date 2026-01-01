@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ fabric.name }} - Fabric Details{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'inventory:fabric_list' %}"><i class="bi bi-box-seam"></i>
+        Inventory</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'inventory:fabric_list' %}">Inventory</a></li>
+            <li class="breadcrumb-item active">{{ fabric.name }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Fabric Details -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-box-seam"></i> {{ fabric.name }}</h5>
+                <a href="{% url 'inventory:fabric_edit' fabric.pk %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="40%">Color</th>
+                                <td>{{ fabric.color|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Pattern</th>
+                                <td>{{ fabric.pattern|default:"-" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <th>Current Stock</th>
+                                <td>
+                                    <span class="fs-4">{{ fabric.quantity_in_stock }}m</span>
+                                    {% if fabric.quantity_in_stock <= fabric.reorder_threshold %} <span
+                                        class="badge bg-warning">Low</span>
+                                        {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Reorder At</th>
+                                <td>{{ fabric.reorder_threshold }}m</td>
+                            </tr>
+                            <tr>
+                                <th>Cost per Meter</th>
+                                <td>₹{{ fabric.cost_per_meter }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Transaction History</h5>
+            </div>
+            <div class="card-body">
+                {% if transactions %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>Order</th>
+                                <th>Recorded By</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transactions %}
+                            <tr>
+                                <td>{{ t.transaction_date|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    {% if t.transaction_type == 'IN' %}
+                                    <span class="badge bg-success">IN</span>
+                                    {% elif t.transaction_type == 'OUT' %}
+                                    <span class="badge bg-danger">OUT</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">{{ t.transaction_type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ t.quantity_meters }}m</td>
+                                <td>
+                                    {% if t.order %}
+                                    <a href="{% url 'orders:order_detail' t.order.pk %}">{{ t.order.order_number }}</a>
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>{{ t.recorded_by.get_full_name|default:t.recorded_by.username }}</td>
+                                <td>{{ t.notes|default:"-"|truncatechars:30 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center">No transactions yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Stock In -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="bi bi-plus-circle"></i> Add Stock</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'inventory:stock_in' fabric.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ stock_in_form.quantity }}
+                    </div>
+                    <div class="mb-3">
+                        {{ stock_in_form.notes }}
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-plus"></i> Add Stock
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Stock Out -->
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h6 class="mb-0"><i class="bi bi-dash-circle"></i> Remove Stock</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'inventory:stock_out' fabric.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ stock_out_form.quantity }}
+                    </div>
+                    <div class="mb-3">
+                        {{ stock_out_form.notes }}
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="bi bi-dash"></i> Remove Stock
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}Orders - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'customers:customer_list' %}"><i class="bi bi-people"></i>
+        Customers</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'orders:order_list' %}"><i class="bi bi-cart"></i>
+        Orders</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-cart"></i> Orders</h2>
+    <a href="{% url 'orders:order_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> New Order
+    </a>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h6>Total Orders</h6>
+                <h2 class="mb-0">{{ total_orders }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h6>Pending</h6>
+                <h2 class="mb-0">{{ pending_orders }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search order #, customer..."
+                    value="{{ search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    {% for status in statuses %}
+                    <option value="{{ status.status_name }}" {% if selected_status==status.status_name %}selected{%
+                        endif %}>
+                        {{ status.display_label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="form-check mt-2">
+                    <input type="checkbox" name="urgent" value="1" class="form-check-input" id="urgentFilter" {% if
+                        selected_urgent=='1' %}checked{% endif %}>
+                    <label class="form-check-label" for="urgentFilter">Urgent Only</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+                <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Garment</th>
+                        <th>Status</th>
+                        <th>Delivery Date</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'orders:order_detail' order.pk %}">
+                                {{ order.order_number }}
+                            </a>
+                            {% if order.is_urgent %}
+                            <span class="badge bg-danger">Urgent</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ order.customer.user.get_full_name|default:order.customer.user.username }}</td>
+                        <td>{{ order.garment_type.name }}</td>
+                        <td>
+                            <span
+                                class="badge bg-{% if order.current_status.is_final_state %}success{% elif order.is_overdue %}danger{% else %}primary{% endif %}">
+                                {{ order.current_status.display_label }}
+                            </span>
+                        </td>
+                        <td>
+                            {{ order.expected_delivery_date|date:"M d, Y" }}
+                            {% if order.is_overdue %}
+                            <span class="badge bg-danger">Overdue</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ order.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'orders:order_detail' order.pk %}" class="btn btn-outline-info"
+                                    title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'orders:order_edit' order.pk %}" class="btn btn-outline-warning"
+                                    title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox display-6 d-block mb-2"></i>
+                            No orders found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_urgent %}&urgent={{ selected_urgent }}{% endif %}">Previous</a>
+                </li>
+                {% endif %}
+                <li class="page-item disabled">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_urgent %}&urgent={{ selected_urgent }}{% endif %}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

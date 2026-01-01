@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Delivery Details{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'delivery:delivery_list' %}"><i class="bi bi-truck"></i>
+        Deliveries</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'delivery:delivery_list' %}">Deliveries</a></li>
+            <li class="breadcrumb-item active">{{ delivery.order.order_number }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <h5 class="mb-0"><i class="bi bi-truck"></i> Delivery Details</h5>
+                <span
+                    class="badge bg-{% if delivery.status == 'delivered' %}success{% elif delivery.status == 'scheduled' %}warning{% else %}info{% endif %}">
+                    {{ delivery.status|title }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Order:</strong> <a href="{% url 'orders:order_detail' delivery.order.pk %}">{{
+                                delivery.order.order_number }}</a></p>
+                        <p><strong>Customer:</strong> {{ delivery.order.customer.user.get_full_name }}</p>
+                        <p><strong>Contact:</strong> {{
+                            delivery.contact_phone|default:delivery.order.customer.phone_number }}</p>
+                        <p><strong>Zone:</strong> {{ delivery.delivery_zone.zone_name|default:"Not assigned" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Scheduled Date:</strong> {{ delivery.scheduled_date|date:"F d, Y" }}</p>
+                        <p><strong>Time Slot:</strong> {{ delivery.scheduled_time_slot|default:"Not specified" }}</p>
+                        <p><strong>Assigned To:</strong> {{ delivery.assigned_to.get_full_name|default:"Unassigned" }}
+                        </p>
+                        {% if delivery.actual_delivery_date %}
+                        <p><strong>Delivered On:</strong> {{ delivery.actual_delivery_date|date:"F d, Y" }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <h6 class="mt-4">Delivery Address</h6>
+                <p>{{ delivery.delivery_address|default:delivery.order.customer.get_full_address|linebreaks }}</p>
+
+                {% if delivery.notes %}
+                <div class="alert alert-info">
+                    <strong>Notes:</strong> {{ delivery.notes }}
+                </div>
+                {% endif %}
+
+                {% if delivery.delivery_notes %}
+                <div class="alert alert-success">
+                    <strong>Delivery Notes:</strong> {{ delivery.delivery_notes }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0">Actions</h6>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'delivery:delivery_update' delivery.pk %}" class="btn btn-primary w-100 mb-2">
+                    <i class="bi bi-pencil"></i> Update Status
+                </a>
+                <a href="{% url 'orders:order_detail' delivery.order.pk %}" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-bag"></i> View Order
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

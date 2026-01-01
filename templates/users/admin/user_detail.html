@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ view_user.username }} - User Details{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'users:admin_user_list' %}"><i class="bi bi-people"></i>
+        Users</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'users:admin_role_list' %}"><i class="bi bi-shield"></i> Roles</a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'users:admin_user_list' %}">Users</a></li>
+            <li class="breadcrumb-item active">{{ view_user.username }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="bi bi-person-circle display-1 text-primary mb-3"></i>
+                <h4>{{ view_user.get_full_name|default:view_user.username }}</h4>
+                <p class="text-muted">@{{ view_user.username }}</p>
+
+                {% if view_user.is_active %}
+                <span class="badge bg-success mb-3">Active</span>
+                {% else %}
+                <span class="badge bg-danger mb-3">Inactive</span>
+                {% endif %}
+
+                <div class="d-grid gap-2">
+                    <a href="{% url 'users:admin_user_edit' view_user.pk %}" class="btn btn-primary">
+                        <i class="bi bi-pencil"></i> Edit User
+                    </a>
+                    <form method="post" action="{% url 'users:admin_user_toggle_status' view_user.pk %}">
+                        {% csrf_token %}
+                        <button type="submit"
+                            class="btn btn-{% if view_user.is_active %}warning{% else %}success{% endif %} w-100">
+                            <i class="bi bi-{% if view_user.is_active %}x-circle{% else %}check-circle{% endif %}"></i>
+                            {% if view_user.is_active %}Deactivate{% else %}Activate{% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person"></i> Account Details</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <th width="30%">User ID</th>
+                        <td>{{ view_user.id }}</td>
+                    </tr>
+                    <tr>
+                        <th>Username</th>
+                        <td>{{ view_user.username }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td>{{ view_user.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>First Name</th>
+                        <td>{{ view_user.first_name|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Name</th>
+                        <td>{{ view_user.last_name|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Created</th>
+                        <td>{{ view_user.date_joined|date:"F d, Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Login</th>
+                        <td>{{ view_user.last_login|date:"F d, Y H:i"|default:"Never" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-shield"></i> Roles</h5>
+            </div>
+            <div class="card-body">
+                {% if roles %}
+                <div class="d-flex flex-wrap gap-2">
+                    {% for role in roles %}
+                    <span class="badge bg-primary fs-6">{{ role.name|title }}</span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No roles assigned.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-key"></i> Permissions</h5>
+            </div>
+            <div class="card-body">
+                {% if permissions %}
+                <div class="d-flex flex-wrap gap-2">
+                    {% for perm in permissions %}
+                    <span class="badge bg-secondary">{{ perm.name }}</span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No permissions (through roles).</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

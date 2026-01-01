@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Measurements - Tailoring Management System{% endblock %}
+
+{% block nav_items %}
+<li class="nav-item"><a class="nav-link" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
+        Dashboard</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'measurements:template_list' %}"><i class="bi bi-rulers"></i>
+        Templates</a></li>
+<li class="nav-item"><a class="nav-link active" href="{% url 'measurements:set_list' %}"><i
+            class="bi bi-person-lines-fill"></i> Measurements</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-person-lines-fill"></i> Customer Measurements</h2>
+    <a href="{% url 'measurements:set_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Record Measurements
+    </a>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <select name="customer" class="form-select">
+                    <option value="">All Customers</option>
+                    {% for c in customers %}
+                    <option value="{{ c.pk }}" {% if selected_customer==c.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ c.user.get_full_name }} ({{ c.user.email }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-filter"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Garment Type</th>
+                        <th>Set Name</th>
+                        <th>Recorded</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ms in measurement_sets %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'customers:customer_detail' ms.customer.pk %}">
+                                {{ ms.customer.user.get_full_name }}
+                            </a>
+                        </td>
+                        <td>{{ ms.garment_type.name }}</td>
+                        <td>{{ ms.set_name|default:"-" }}</td>
+                        <td>{{ ms.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'measurements:set_detail' ms.pk %}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'measurements:set_edit' ms.pk %}" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            No measurements recorded yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
