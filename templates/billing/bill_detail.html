@@ -112,7 +112,7 @@
                         {% for inv in invoices %}
                         <tr>
                             <td>{{ inv.invoice_number }}</td>
-                            <td>₹{{ inv.amount }}</td>
+                            <td>₹{{ inv.bill.total_amount }}</td>
                             <td>{{ inv.created_at|date:"M d, Y" }}</td>
                             <td>
                                 <a href="{% url 'billing:download_pdf' inv.pk %}" class="btn btn-sm btn-outline-danger">

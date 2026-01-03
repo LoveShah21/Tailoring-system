@@ -51,8 +51,7 @@
                 <select name="status" class="form-select">
                     <option value="">All Statuses</option>
                     {% for status in statuses %}
-                    <option value="{{ status.status_name }}" {% if selected_status==status.status_name %}selected{%
-                        endif %}>
+                    <option value="{{ status.status_name }}" {% if selected_status == status.status_name %}selected{% endif %}>
                         {{ status.display_label }}
                     </option>
                     {% endfor %}
@@ -60,8 +59,7 @@
             </div>
             <div class="col-md-2">
                 <div class="form-check mt-2">
-                    <input type="checkbox" name="urgent" value="1" class="form-check-input" id="urgentFilter" {% if
-                        selected_urgent=='1' %}checked{% endif %}>
+                    <input type="checkbox" name="urgent" value="1" class="form-check-input" id="urgentFilter" {% if selected_urgent == '1' %}checked{% endif %}>
                     <label class="form-check-label" for="urgentFilter">Urgent Only</label>
                 </div>
             </div>

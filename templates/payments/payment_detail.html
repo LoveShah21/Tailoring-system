@@ -31,7 +31,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <p><strong>Amount:</strong> ₹{{ payment.amount }}</p>
+                        <p><strong>Amount:</strong> ₹{{ payment.amount_paid }}</p>
                         <p><strong>Payment Mode:</strong> {{ payment.payment_mode.mode_name|default:"Online" }}</p>
                         <p><strong>Date:</strong> {{ payment.created_at|date:"F d, Y H:i" }}</p>
                     </div>

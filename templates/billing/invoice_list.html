@@ -37,7 +37,7 @@
                         <td><a href="{% url 'orders:order_detail' inv.bill.order.pk %}">{{ inv.bill.order.order_number
                                 }}</a></td>
                         <td>{{ inv.bill.order.customer.user.get_full_name }}</td>
-                        <td>₹{{ inv.amount }}</td>
+                        <td>₹{{ inv.bill.total_amount }}</td>
                         <td>{{ inv.created_at|date:"M d, Y" }}</td>
                         <td>
                             <a href="{% url 'billing:bill_detail' inv.bill.pk %}" class="btn btn-sm btn-outline-info">

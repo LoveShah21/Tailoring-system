@@ -38,8 +38,7 @@
                             <a href="{% url 'inventory:fabric_detail' alert.fabric.pk %}">
                                 {{ alert.fabric.name }}
                             </a>
-                            <br><small class="text-muted">{{ alert.fabric.color|default:"" }} {{
-                                alert.fabric.pattern|default:"" }}</small>
+                            <br><small class="text-muted">{{ alert.fabric.color|default:"" }} {{ alert.fabric.pattern|default:"" }}</small>
                         </td>
                         <td>
                             <span class="text-danger fw-bold">{{ alert.fabric.quantity_in_stock }}m</span>

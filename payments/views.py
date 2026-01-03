@@ -28,7 +28,7 @@ class PaymentListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
     
     def get_queryset(self):
         return Payment.objects.select_related(
-            'bill__order__customer__user'
+            'bill__order__customer__user', 'payment_mode'
         ).order_by('-created_at')
 
 
@@ -60,7 +60,7 @@ class CreatePaymentOrderView(LoginRequiredMixin, View):
             
             return JsonResponse({
                 'order_id': razorpay_order.razorpay_order_id,
-                'amount': int(razorpay_order.amount * 100),  # In paise
+                'amount': razorpay_order.amount_paise,  # In paise
                 'currency': 'INR',
                 'key': razorpay_order.razorpay_key_id,
             })
@@ -83,7 +83,7 @@ class VerifyPaymentView(LoginRequiredMixin, View):
                 razorpay_signature=razorpay_signature,
                 user=request.user
             )
-            messages.success(request, f'Payment of ₹{payment.amount} recorded successfully.')
+            messages.success(request, f'Payment of ₹{payment.amount_paid} recorded successfully.')
             return JsonResponse({'success': True, 'payment_id': payment.pk})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
@@ -109,7 +109,7 @@ class RecordCashPaymentView(LoginRequiredMixin, StaffRequiredMixin, View):
                 notes=notes,
                 user=request.user
             )
-            messages.success(request, f'Cash payment of ₹{payment.amount} recorded.')
+            messages.success(request, f'Cash payment of ₹{payment.amount_paid} recorded.')
         except Exception as e:
             messages.error(request, f'Error recording payment: {str(e)}')
         

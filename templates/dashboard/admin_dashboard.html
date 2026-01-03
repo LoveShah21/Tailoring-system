@@ -7,16 +7,16 @@
         Dashboard</a></li>
 <li class="nav-item"><a class="nav-link" href="{% url 'users:admin_user_list' %}"><i class="bi bi-people"></i> Users</a>
 </li>
-<li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-cart"></i> Orders</a></li>
-<li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-box-seam"></i> Inventory</a></li>
-<li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-bar-chart"></i> Reports</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'orders:order_list' %}"><i class="bi bi-cart"></i> Orders</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'inventory:fabric_list' %}"><i class="bi bi-box-seam"></i> Inventory</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'reporting:dashboard' %}"><i class="bi bi-bar-chart"></i> Reports</a></li>
 {% endblock %}
 
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
         <h2><i class="bi bi-speedometer2"></i> Admin Dashboard</h2>
-        <p class="text-muted">Welcome back, {{ user.get_full_name }}!</p>
+        <p class="text-muted">Welcome back, {{ user.get_full_name|default:user.username }}!</p>
     </div>
 </div>
 
@@ -28,7 +28,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title">Pending Orders</h6>
-                        <h2 class="mb-0">--</h2>
+                        <h2 class="mb-0">{{ pending_orders|default:0 }}</h2>
                     </div>
                     <i class="bi bi-cart display-4 opacity-50"></i>
                 </div>
@@ -41,7 +41,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title">Completed Today</h6>
-                        <h2 class="mb-0">--</h2>
+                        <h2 class="mb-0">{{ completed_today|default:0 }}</h2>
                     </div>
                     <i class="bi bi-check-circle display-4 opacity-50"></i>
                 </div>
@@ -54,7 +54,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title">Ready for Delivery</h6>
-                        <h2 class="mb-0">--</h2>
+                        <h2 class="mb-0">{{ ready_for_delivery|default:0 }}</h2>
                     </div>
                     <i class="bi bi-truck display-4 opacity-50"></i>
                 </div>
@@ -67,7 +67,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <h6 class="card-title">Revenue (Month)</h6>
-                        <h2 class="mb-0">₹--</h2>
+                        <h2 class="mb-0">₹{{ monthly_revenue|floatformat:0|default:"0" }}</h2>
                     </div>
                     <i class="bi bi-currency-rupee display-4 opacity-50"></i>
                 </div>
@@ -85,11 +85,11 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <a href="#" class="btn btn-outline-primary"><i class="bi bi-plus-circle"></i> New Order</a>
-                    <a href="#" class="btn btn-outline-success"><i class="bi bi-person-plus"></i> Add Customer</a>
+                    <a href="{% url 'orders:order_create' %}" class="btn btn-outline-primary"><i class="bi bi-plus-circle"></i> New Order</a>
+                    <a href="{% url 'customers:customer_create' %}" class="btn btn-outline-success"><i class="bi bi-person-plus"></i> Add Customer</a>
                     <a href="{% url 'users:admin_user_create' %}" class="btn btn-outline-info"><i
                             class="bi bi-person-badge"></i> Add Staff</a>
-                    <a href="#" class="btn btn-outline-warning"><i class="bi bi-box-seam"></i> Update Inventory</a>
+                    <a href="{% url 'inventory:fabric_create' %}" class="btn btn-outline-warning"><i class="bi bi-box-seam"></i> Add Fabric</a>
                 </div>
             </div>
         </div>
@@ -100,7 +100,15 @@
                 <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Alerts</h5>
             </div>
             <div class="card-body">
+                {% if pending_orders > 10 %}
+                <div class="alert alert-warning mb-2"><i class="bi bi-exclamation-circle"></i> {{ pending_orders }} orders pending!</div>
+                {% endif %}
+                {% if ready_for_delivery > 0 %}
+                <div class="alert alert-info mb-2"><i class="bi bi-truck"></i> {{ ready_for_delivery }} orders ready for delivery</div>
+                {% endif %}
+                {% if not pending_orders > 10 and not ready_for_delivery > 0 %}
                 <p class="text-muted">No alerts at this time.</p>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -112,10 +120,37 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Orders</h5>
-                <a href="#" class="btn btn-sm btn-primary">View All</a>
+                <a href="{% url 'orders:order_list' %}" class="btn btn-sm btn-primary">View All</a>
             </div>
             <div class="card-body">
+                {% if recent_orders %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Garment</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td><a href="{% url 'orders:order_detail' order.pk %}">{{ order.order_number }}</a></td>
+                                <td>{{ order.customer.user.get_full_name|default:order.customer.user.username }}</td>
+                                <td>{{ order.garment_type.name }}</td>
+                                <td><span class="badge bg-{% if order.current_status.is_final_state %}success{% else %}primary{% endif %}">{{ order.current_status.display_label }}</span></td>
+                                <td>{{ order.created_at|date:"M d, Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
                 <p class="text-muted text-center py-4">No orders yet. Create your first order to get started.</p>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -33,12 +33,12 @@ class ReportingDashboardView(LoginRequiredMixin, AdminRequiredMixin, TemplateVie
         # Revenue stats
         context['total_revenue'] = Payment.objects.filter(
             status='captured'
-        ).aggregate(total=Sum('amount'))['total'] or 0
+        ).aggregate(total=Sum('amount_paid'))['total'] or 0
         
         context['monthly_revenue'] = Payment.objects.filter(
             status='captured',
             created_at__date__gte=thirty_days_ago
-        ).aggregate(total=Sum('amount'))['total'] or 0
+        ).aggregate(total=Sum('amount_paid'))['total'] or 0
         
         # Order stats
         context['total_orders'] = Order.objects.filter(is_deleted=False).count()
@@ -101,7 +101,7 @@ class RevenueReportView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
         ).annotate(
             month=TruncMonth('created_at')
         ).values('month').annotate(
-            total=Sum('amount'),
+            total=Sum('amount_paid'),
             count=Count('id')
         ).order_by('month')
         
@@ -158,7 +158,7 @@ class ExportRevenueCSVView(LoginRequiredMixin, AdminRequiredMixin, View):
                 p.created_at.strftime('%Y-%m-%d %H:%M'),
                 p.bill.order.order_number if p.bill else '-',
                 p.bill.order.customer.user.get_full_name() if p.bill else '-',
-                p.amount,
+                p.amount_paid,
                 p.payment_mode.mode_name if p.payment_mode else '-'
             ])
         

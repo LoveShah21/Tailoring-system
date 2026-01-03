@@ -34,13 +34,17 @@
                     <tr>
                         <td>{{ payment.created_at|date:"M d, Y H:i" }}</td>
                         <td>
-                            {% if payment.bill %}
+                            {% if payment.bill and payment.bill.order %}
                             <a href="{% url 'orders:order_detail' payment.bill.order.pk %}">{{
                                 payment.bill.order.order_number }}</a>
                             {% else %}-{% endif %}
                         </td>
-                        <td>{{ payment.bill.order.customer.user.get_full_name|default:"-" }}</td>
-                        <td>₹{{ payment.amount }}</td>
+                        <td>
+                            {% if payment.bill and payment.bill.order and payment.bill.order.customer %}
+                                {{ payment.bill.order.customer.user.get_full_name|default:"-" }}
+                            {% else %}-{% endif %}
+                        </td>
+                        <td>₹{{ payment.amount_paid }}</td>
                         <td>{{ payment.payment_mode.mode_name|default:"Online" }}</td>
                         <td>
                             {% if payment.status == 'captured' %}
@@ -66,6 +70,24 @@
                 </tbody>
             </table>
         </div>
-    </div>
-</div>
+    
+        {% if is_paginated %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+                {% endif %}
+                <li class="page-item disabled">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
 {% endblock %}

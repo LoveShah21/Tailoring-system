@@ -116,6 +116,11 @@ DATABASES = {
 
 AUTH_USER_MODEL = 'users.User'
 
+# Custom authentication backend to allow login with username OR email
+AUTHENTICATION_BACKENDS = [
+    'users.backends.EmailOrUsernameBackend',
+]
+
 
 # =============================================================================
 # PASSWORD VALIDATION

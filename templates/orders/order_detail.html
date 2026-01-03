@@ -169,8 +169,7 @@
                             <span class="badge bg-primary rounded-pill">{{ forloop.revcounter }}</span>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <strong>{{ h.from_status.display_label }}</strong> → <strong>{{ h.to_status.display_label
-                                }}</strong>
+                            <strong>{{ h.from_status.display_label }}</strong> → <strong>{{ h.to_status.display_label }}</strong>
                             <br>
                             <small class="text-muted">
                                 by {{ h.changed_by.get_full_name|default:h.changed_by.username }}
@@ -236,6 +235,7 @@
         </div>
 
         <!-- Danger Zone -->
+        {% if user.is_superuser %}
         <div class="card border-danger">
             <div class="card-header bg-danger text-white">
                 <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Danger Zone</h6>
@@ -250,6 +250,7 @@
                 </form>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 

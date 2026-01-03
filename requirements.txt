@@ -18,6 +18,8 @@ Pillow>=10.0.0
 
 # Security
 django-csp>=3.8
+bleach>=6.0.0
+python-magic-bin>=0.4.14
 
 # Development & Testing
 django-debug-toolbar>=4.2.0

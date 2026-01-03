@@ -27,7 +27,7 @@ class FabricListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
     paginate_by = 20
     
     def get_queryset(self):
-        queryset = Fabric.objects.filter(is_active=True).order_by('name')
+        queryset = Fabric.objects.filter(is_deleted=False).order_by('name')
         
         # Search
         search = self.request.GET.get('search', '').strip()
@@ -49,9 +49,9 @@ class FabricListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['search'] = self.request.GET.get('search', '')
         context['low_stock_filter'] = self.request.GET.get('low_stock', '')
-        context['total_fabrics'] = Fabric.objects.filter(is_active=True).count()
+        context['total_fabrics'] = Fabric.objects.filter(is_deleted=False).count()
         context['low_stock_count'] = Fabric.objects.filter(
-            is_active=True,
+            is_deleted=False,
             quantity_in_stock__lte=F('reorder_threshold')
         ).count()
         context['total_value'] = InventoryService.get_stock_value()
@@ -116,8 +116,11 @@ class FabricEditView(LoginRequiredMixin, StaffRequiredMixin, UpdateView):
         return context
     
     def form_valid(self, form):
+        response = super().form_valid(form)
+        # Check for low stock alert after update
+        InventoryService._check_low_stock_alert(self.object)
         messages.success(self.request, 'Fabric updated successfully.')
-        return super().form_valid(form)
+        return response
     
     def get_success_url(self):
         return reverse_lazy('inventory:fabric_detail', kwargs={'pk': self.object.pk})
@@ -180,7 +183,7 @@ class LowStockAlertListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
     def get_queryset(self):
         return LowStockAlert.objects.filter(
             is_resolved=False
-        ).select_related('fabric', 'triggered_by').order_by('-alerted_at')
+        ).select_related('fabric').order_by('-alert_triggered_at')
 
 
 class ResolveAlertView(LoginRequiredMixin, StaffRequiredMixin, View):

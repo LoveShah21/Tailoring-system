@@ -52,8 +52,7 @@
                             <div class="col-md-4">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="permissions"
-                                        value="{{ perm.id }}" id="perm_{{ perm.id }}" {% if perm.id in role_permissions
-                                        %}checked{% endif %}>
+                                        value="{{ perm.id }}" id="perm_{{ perm.id }}" {% if perm.id in role_permissions %}checked{% endif %}>
                                     <label class="form-check-label" for="perm_{{ perm.id }}">
                                         {{ perm.name }}
                                     </label>

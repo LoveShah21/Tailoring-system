@@ -51,6 +51,9 @@ class InventoryService:
                 notes='Initial stock entry',
                 recorded_by=created_by,
             )
+            
+        # Check for low stock alert
+        InventoryService._check_low_stock_alert(fabric)
         
         return fabric
     

@@ -14,6 +14,7 @@ from django.utils.decorators import method_decorator
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import User, Role, UserRole, Permission, RolePermission
 from .forms import (
@@ -28,6 +29,7 @@ from .permissions import AdminRequiredMixin, StaffRequiredMixin, role_required
 # AUTHENTICATION VIEWS
 # =============================================================================
 
+@method_decorator(csrf_exempt, name='dispatch')
 class LoginView(View):
     """User login view."""
     template_name = 'users/login.html'
@@ -39,7 +41,29 @@ class LoginView(View):
         return render(request, self.template_name, {'form': form})
     
     def post(self, request):
-        form = UserLoginForm(request, data=request.POST)
+        import json
+        
+        # Check if this is an API request (JSON)
+        is_api_request = (
+            request.content_type == 'application/json' or
+            request.headers.get('Accept') == 'application/json' or
+            request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        )
+        
+        # Parse JSON body if content type is JSON
+        if request.content_type == 'application/json':
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid JSON data',
+                    'errors': {}
+                }, status=400)
+        else:
+            data = request.POST
+        
+        form = UserLoginForm(request, data=data)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
@@ -50,20 +74,61 @@ class LoginView(View):
             
             messages.success(request, f'Welcome back, {user.get_full_name()}!')
             
-            # Redirect based on role
+            # Return JSON for API requests
+            if is_api_request:
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Welcome back, {user.get_full_name()}!',
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                        'email': user.email,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                    },
+                    'redirect_url': request.GET.get('next', '/dashboard/')
+                })
+            
+            # Redirect based on role for browser requests
             next_url = request.GET.get('next', '')
             if next_url:
                 return redirect(next_url)
             return redirect('dashboard:home')
         
+        # Form is invalid
+        if is_api_request:
+            errors = {}
+            for field, error_list in form.errors.items():
+                errors[field] = [str(e) for e in error_list]
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid credentials',
+                'errors': errors
+            }, status=400)
+        
         return render(request, self.template_name, {'form': form})
 
 
+
+@method_decorator(csrf_exempt, name='dispatch')
 class LogoutView(View):
     """User logout view."""
     
     def get(self, request):
+        # Check if this is an API request
+        is_api_request = (
+            request.headers.get('Accept') == 'application/json' or
+            request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        )
+        
         logout(request)
+        
+        if is_api_request:
+            return JsonResponse({
+                'success': True,
+                'message': 'You have been logged out.'
+            })
+        
         messages.info(request, 'You have been logged out.')
         return redirect('users:login')
     
@@ -71,6 +136,7 @@ class LogoutView(View):
         return self.get(request)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(View):
     """User registration view (for customers)."""
     template_name = 'users/register.html'
@@ -82,7 +148,29 @@ class RegisterView(View):
         return render(request, self.template_name, {'form': form})
     
     def post(self, request):
-        form = UserRegistrationForm(request.POST)
+        import json
+        
+        # Check if this is an API request (JSON)
+        is_api_request = (
+            request.content_type == 'application/json' or
+            request.headers.get('Accept') == 'application/json' or
+            request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        )
+        
+        # Parse JSON body if content type is JSON
+        if request.content_type == 'application/json':
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid JSON data',
+                    'errors': {}
+                }, status=400)
+        else:
+            data = request.POST
+        
+        form = UserRegistrationForm(data)
         if form.is_valid():
             user = form.save()
             # Assign customer role by default
@@ -91,8 +179,38 @@ class RegisterView(View):
             except Exception:
                 pass  # Role might not exist yet
             
-            messages.success(request, 'Registration successful! Please login.')
-            return redirect('users:login')
+            # Auto-login the user after registration
+            login(request, user)
+            
+            messages.success(request, f'Registration successful! Welcome, {user.first_name or user.username}!')
+            
+            # Return JSON for API requests
+            if is_api_request:
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Registration successful! Welcome, {user.first_name or user.username}!',
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                        'email': user.email,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                    },
+                    'redirect_url': '/dashboard/'
+                })
+            
+            return redirect('dashboard:home')
+        
+        # Form is invalid
+        if is_api_request:
+            errors = {}
+            for field, error_list in form.errors.items():
+                errors[field] = [str(e) for e in error_list]
+            return JsonResponse({
+                'success': False,
+                'message': 'Registration failed. Please check the form.',
+                'errors': errors
+            }, status=400)
         
         return render(request, self.template_name, {'form': form})
 
@@ -321,7 +439,7 @@ class AdminRoleListView(AdminRequiredMixin, ListView):
     context_object_name = 'roles'
     
     def get_queryset(self):
-        return Role.objects.filter(is_deleted=False).order_by('name')
+        return Role.objects.filter(is_deleted=False).prefetch_related('role_permissions__permission').order_by('name')
 
 
 @method_decorator(login_required, name='dispatch')

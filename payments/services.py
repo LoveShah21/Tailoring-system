@@ -141,11 +141,11 @@ class PaymentService:
         EmailService.send_payment_success(payment)
         
         # Audit log
-        AuditService.log_payment_event(
+        AuditService.log_payment(
             payment=payment,
-            action='CAPTURED',
-            amount=payment.amount_paid,
+            action_type='CAPTURED',
             performed_by=recorded_by,
+            description=f'Payment captured: ₹{payment.amount_paid}',
         )
         
         logger.info(f"Payment captured: {razorpay_payment_id} for ₹{payment.amount_paid}")
@@ -182,11 +182,11 @@ class PaymentService:
         cls._update_invoice_status(invoice)
         
         # Audit log
-        AuditService.log_payment_event(
+        AuditService.log_payment(
             payment=payment,
-            action='RECORDED',
-            amount=payment.amount_paid,
+            action_type='RECORDED',
             performed_by=recorded_by,
+            description=f'Cash payment recorded: ₹{payment.amount_paid}',
         )
         
         return payment
@@ -352,11 +352,11 @@ class PaymentService:
         payment.status = 'REFUNDED'
         payment.save()
         
-        AuditService.log_payment_event(
+        AuditService.log_payment(
             payment=payment,
-            action='REFUND_INITIATED',
-            amount=amount,
+            action_type='REFUND_INITIATED',
             performed_by=initiated_by,
+            description=f'Refund initiated: ₹{amount}',
         )
         
         return refund
