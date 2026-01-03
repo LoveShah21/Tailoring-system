@@ -13,7 +13,10 @@ from django.urls import reverse_lazy
 from django.http import JsonResponse
 
 from .models import Order, OrderStatus, OrderStatusTransition, OrderStatusHistory
-from .forms import OrderCreateForm, OrderEditForm, OrderStatusTransitionForm, OrderAssignmentForm
+from .forms import (
+    OrderCreateForm, OrderEditForm, OrderStatusTransitionForm, 
+    OrderAssignmentForm, OrderMaterialAllocationForm
+)
 from .services import OrderService, InvalidTransitionError
 from users.permissions import StaffRequiredMixin
 
@@ -107,6 +110,7 @@ class OrderDetailView(LoginRequiredMixin, StaffRequiredMixin, DetailView):
         # Forms
         context['transition_form'] = OrderStatusTransitionForm(order)
         context['assignment_form'] = OrderAssignmentForm()
+        context['allocation_form'] = OrderMaterialAllocationForm()
         
         return context
 
@@ -220,6 +224,32 @@ class OrderAssignView(LoginRequiredMixin, StaffRequiredMixin, View):
         return redirect('orders:order_detail', pk=pk)
 
 
+class OrderAllocateMaterialView(LoginRequiredMixin, StaffRequiredMixin, View):
+    """Handle material allocation."""
+    
+    def post(self, request, pk):
+        order = get_object_or_404(Order, pk=pk, is_deleted=False)
+        form = OrderMaterialAllocationForm(request.POST)
+        
+        if form.is_valid():
+            try:
+                from django.core.exceptions import ValidationError
+                OrderService.allocate_material(
+                    order=order,
+                    fabric=form.cleaned_data['fabric'],
+                    quantity_meters=form.cleaned_data['quantity'],
+                    allocated_by=request.user,
+                    request=request
+                )
+                messages.success(request, 'Material allocated successfully.')
+            except ValidationError as e:
+                messages.error(request, str(e))
+        else:
+            messages.error(request, 'Invalid allocation data.')
+            
+        return redirect('orders:order_detail', pk=pk)
+
+
 class OrderDeleteView(LoginRequiredMixin, StaffRequiredMixin, View):
     """Soft delete an order."""
     
@@ -259,3 +289,37 @@ class OrderWorkTypesAPI(LoginRequiredMixin, View):
         )
         
         return JsonResponse({'work_types': list(work_types)})
+
+
+class CustomerOrderDetailView(LoginRequiredMixin, DetailView):
+    """
+    View order details for a customer.
+    Ensures user can only view their own orders.
+    """
+    model = Order
+    template_name = 'orders/customer_order_detail.html'
+    context_object_name = 'order'
+    
+    def get_queryset(self):
+        # Filter orders belonging to the logged-in user
+        return Order.objects.filter(
+            customer__user=self.request.user,
+            is_deleted=False
+        ).select_related(
+            'customer__user', 'garment_type', 'current_status',
+            'measurement_set', 'design', 'bill__invoice'
+        )
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order = self.object
+        
+        # Add basic status history
+        context['status_history'] = order.status_history.select_related(
+            'from_status', 'to_status'
+        ).order_by('-changed_at')
+        
+        # Add work types
+        context['work_types'] = order.order_work_types.select_related('work_type')
+        
+        return context

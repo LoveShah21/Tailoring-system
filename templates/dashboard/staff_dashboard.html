@@ -3,47 +3,168 @@
 {% block title %}Staff Dashboard - Tailoring Management System{% endblock %}
 
 {% block nav_items %}
-<li class="nav-item"><a class="nav-link active" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
-        Dashboard</a></li>
+<li class="nav-item">
+    <a class="nav-link active" href="{% url 'dashboard:home' %}">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'orders:order_list' %}">
+        <i class="bi bi-cart"></i> Orders
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'customers:customer_list' %}">
+        <i class="bi bi-people"></i> Customers
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'inventory:fabric_list' %}">
+        <i class="bi bi-box-seam"></i> Inventory
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'billing:bill_list' %}">
+        <i class="bi bi-receipt"></i> Billing
+    </a>
+</li>
 {% endblock %}
 
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
         <h2><i class="bi bi-speedometer2"></i> Staff Dashboard</h2>
-        <p class="text-muted">Welcome, {{ user.get_full_name }}!</p>
+        <p class="text-muted">Welcome back, {{ user.get_full_name|default:user.username }}!</p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Pending Orders</h6>
+                        <h2 class="mt-2 mb-0">{{ pending_orders }}</h2>
+                    </div>
+                    <i class="bi bi-cart fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Completed Today</h6>
+                        <h2 class="mt-2 mb-0">{{ completed_today }}</h2>
+                    </div>
+                    <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Ready for Delivery</h6>
+                        <h2 class="mt-2 mb-0">{{ ready_for_delivery }}</h2>
+                    </div>
+                    <i class="bi bi-truck fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Total Customers</h6>
+                        <h2 class="mt-2 mb-0">{{ total_customers }}</h2>
+                    </div>
+                    <i class="bi bi-people fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-md-6">
-        <div class="card">
+    <!-- Quick Actions -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-list-task"></i> Quick Links</h5>
+                <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
             </div>
             <div class="card-body">
-                <div class="list-group list-group-flush">
-                    <a href="{% url 'users:profile' %}" class="list-group-item list-group-item-action">
-                        <i class="bi bi-person"></i> My Profile
+                <div class="d-grid gap-3">
+                    <a href="{% url 'orders:order_create' %}" class="btn btn-outline-primary text-start">
+                        <i class="bi bi-plus-circle me-2"></i> New Order
+                    </a>
+                    <a href="{% url 'customers:customer_create' %}" class="btn btn-outline-success text-start">
+                        <i class="bi bi-person-plus me-2"></i> Add Customer
+                    </a>
+                    <a href="{% url 'inventory:fabric_create' %}" class="btn btn-outline-warning text-start text-dark">
+                        <i class="bi bi-box-seam me-2"></i> Add Fabric
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-info-circle"></i> System Info</h5>
+    <!-- Recent Orders -->
+    <div class="col-md-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Orders</h5>
+                <a href="{% url 'orders:order_list' %}" class="btn btn-sm btn-primary">View All</a>
             </div>
             <div class="card-body">
-                <p>Your roles:
-                    {% for role in roles %}
-                    <span class="badge bg-primary">{{ role }}</span>
-                    {% empty %}
-                    <span class="text-muted">None</span>
-                    {% endfor %}
-                </p>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Garment</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'orders:order_detail' order.pk %}" class="text-decoration-none fw-bold">
+                                        {{ order.order_number }}
+                                    </a>
+                                </td>
+                                <td>{{ order.customer.user.get_full_name }}</td>
+                                <td>{{ order.garment_type.name }}</td>
+                                <td>
+                                    <span class="badge bg-{% if order.current_status.is_final_state %}success{% else %}primary{% endif %}">
+                                        {{ order.current_status.display_label }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'orders:order_detail' order.pk %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-3 text-muted">No recent orders found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

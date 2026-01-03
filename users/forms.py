@@ -5,7 +5,13 @@ Forms for user registration, login, profile management.
 """
 
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
+
+from django.contrib.auth.forms import (
+    AuthenticationForm, PasswordChangeForm, PasswordResetForm, SetPasswordForm
+)
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError
 from .models import User, Role
@@ -242,3 +248,81 @@ class RoleForm(forms.ModelForm):
                 'rows': 3,
             }),
         }
+
+
+class CustomPasswordResetForm(PasswordResetForm):
+    """Custom password reset form using NotificationService."""
+    
+    email = forms.EmailField(
+        label='Email',
+        max_length=254,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Email Address',
+            'autocomplete': 'email',
+        })
+    )
+    
+    def save(self, domain_override=None,
+             subject_template_name='registration/password_reset_subject.txt',
+             email_template_name='registration/password_reset_email.html',
+             use_https=False, token_generator=default_token_generator,
+             from_email=None, request=None, html_email_template_name=None,
+             extra_email_context=None):
+        """
+        Generate a one-use only link for resetting password and send it to the user.
+        """
+        email = self.cleaned_data["email"]
+        
+        # Import here to avoid circular imports
+        from notifications.services import NotificationService
+        
+        for user in self.get_users(email):
+            if not user.has_usable_password():
+                continue
+                
+            # Generate token and uid
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = token_generator.make_token(user)
+            
+            # Build context
+            context = {
+                'email': user.email,
+                'domain': domain_override,
+                'site_name': domain_override,
+                'uid': uid,
+                'user': user,
+                'token': token,
+                'protocol': 'https' if use_https else 'http',
+                **(extra_email_context or {}),
+            }
+            
+            # Send via NotificationService
+            NotificationService.send_notification(
+                recipient=user,
+                type_name='password_reset',
+                context=context,
+                related_object=None
+            )
+
+
+class CustomSetPasswordForm(SetPasswordForm):
+    """Custom set password form with Bootstrap styling."""
+    
+    new_password1 = forms.CharField(
+        label='New Password',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'New Password',
+            'autocomplete': 'new-password',
+        }),
+        help_text=password_validation.password_validators_help_text_html(),
+    )
+    new_password2 = forms.CharField(
+        label='Confirm New Password',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirm New Password',
+            'autocomplete': 'new-password',
+        }),
+    )

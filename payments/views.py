@@ -7,10 +7,11 @@ Payment processing and history views.
 from django.views.generic import ListView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404, render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.conf import settings
 
 from .models import Payment, RazorpayOrder
 from .services import PaymentService
@@ -46,23 +47,30 @@ class CreatePaymentOrderView(LoginRequiredMixin, View):
     def post(self, request, bill_pk):
         bill = get_object_or_404(OrderBill, pk=bill_pk)
         
-        if bill.balance_due <= 0:
-            messages.warning(request, 'This bill has already been paid.')
+        if not hasattr(bill, 'invoice'):
+             messages.error(request, 'No invoice found for this order.')
+             return redirect('billing:bill_detail', pk=bill_pk)
+             
+        invoice = bill.invoice
+        
+        if invoice.is_fully_paid():
+            messages.warning(request, 'This invoice has already been paid.')
             return redirect('billing:bill_detail', pk=bill_pk)
         
         try:
-            amount = request.POST.get('amount', bill.balance_due)
+            amount = request.POST.get('amount')
+            amount_to_pay = float(amount) if amount else invoice.get_balance_due()
+            
             razorpay_order = PaymentService.create_razorpay_order(
-                bill=bill,
-                amount=float(amount),
-                user=request.user
+                invoice=invoice,
+                amount_rupees=amount_to_pay
             )
             
             return JsonResponse({
                 'order_id': razorpay_order.razorpay_order_id,
                 'amount': razorpay_order.amount_paise,  # In paise
                 'currency': 'INR',
-                'key': razorpay_order.razorpay_key_id,
+                'key': settings.RAZORPAY_KEY_ID,
             })
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
@@ -81,7 +89,7 @@ class VerifyPaymentView(LoginRequiredMixin, View):
                 razorpay_order_id=razorpay_order_id,
                 razorpay_payment_id=razorpay_payment_id,
                 razorpay_signature=razorpay_signature,
-                user=request.user
+                recorded_by=request.user
             )
             messages.success(request, f'Payment of ₹{payment.amount_paid} recorded successfully.')
             return JsonResponse({'success': True, 'payment_id': payment.pk})
@@ -129,3 +137,11 @@ class RazorpayWebhookView(View):
             return JsonResponse({'status': 'ok'})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+
+
+class PaymentFailedView(LoginRequiredMixin, View):
+    """Display payment failed page."""
+    
+    def get(self, request):
+        error_message = request.GET.get('error', 'Unknown error occurred')
+        return render(request, 'payments/payment_failed.html', {'error_message': error_message})

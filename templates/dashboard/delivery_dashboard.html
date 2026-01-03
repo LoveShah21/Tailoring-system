@@ -3,54 +3,118 @@
 {% block title %}Delivery Dashboard - Tailoring Management System{% endblock %}
 
 {% block nav_items %}
-<li class="nav-item"><a class="nav-link active" href="{% url 'dashboard:home' %}"><i class="bi bi-speedometer2"></i>
-        Dashboard</a></li>
+<li class="nav-item">
+    <a class="nav-link active" href="{% url 'dashboard:home' %}">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'users:profile' %}">
+        <i class="bi bi-person"></i> My Profile
+    </a>
+</li>
 {% endblock %}
 
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
         <h2><i class="bi bi-truck"></i> Delivery Dashboard</h2>
-        <p class="text-muted">Manage deliveries and track scheduled pickups.</p>
+        <p class="text-muted">Welcome, {{ user.get_full_name|default:user.username }}!</p>
     </div>
 </div>
 
+<!-- Stats -->
 <div class="row mb-4">
     <div class="col-md-4">
-        <div class="card text-white bg-primary h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-calendar-check display-4"></i>
-                <h6 class="mt-2">Today's Deliveries</h6>
-                <h2>--</h2>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card text-white bg-warning h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-hourglass display-4"></i>
-                <h6 class="mt-2">Pending</h6>
-                <h2>--</h2>
+        <div class="card text-white bg-warning text-dark h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Ready for Delivery</h6>
+                        <h2 class="mt-2 mb-0">{{ pending_delivery }}</h2>
+                    </div>
+                    <i class="bi bi-box-seam fs-1 opacity-50"></i>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="card text-white bg-success h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-check2-all display-4"></i>
-                <h6 class="mt-2">Completed</h6>
-                <h2>--</h2>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Delivered</h6>
+                        <h2 class="mt-2 mb-0">{{ delivered_orders }}</h2>
+                    </div>
+                    <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-success h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0 text-muted">Total Assigned</h6>
+                        <h2 class="mt-2 mb-0 text-success">{{ total_assigned }}</h2>
+                    </div>
+                    <i class="bi bi-list-task fs-1 opacity-25"></i>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Assignments -->
 <div class="card">
     <div class="card-header">
-        <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Scheduled Deliveries</h5>
+        <h5 class="mb-0"><i class="bi bi-list-task"></i> My Assigned Deliveries</h5>
     </div>
     <div class="card-body">
-        <p class="text-muted text-center py-4">No deliveries scheduled.</p>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Address</th>
+                        <th>Status</th>
+                        <th>Assigned On</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for assignment in recent_assignments %}
+                    <tr>
+                        <td>
+                            <span class="fw-bold">{{ assignment.order.order_number }}</span>
+                        </td>
+                        <td>{{ assignment.order.customer.user.get_full_name }}</td>
+                        <td><small class="text-muted">{{ assignment.order.customer.address }}</small></td>
+                        <td>
+                            <span class="badge bg-{% if assignment.order.current_status.is_final_state %}success{% else %}warning{% endif %}">
+                                {{ assignment.order.current_status.display_label }}
+                            </span>
+                        </td>
+                        <td>{{ assignment.assigned_at|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'orders:order_detail' assignment.order.pk %}" class="btn btn-sm btn-outline-primary">
+                                View Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="bi bi-check2-circle fs-2 d-block mb-2"></i>
+                            No deliveries pending.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -32,11 +32,11 @@ class ReportingDashboardView(LoginRequiredMixin, AdminRequiredMixin, TemplateVie
         
         # Revenue stats
         context['total_revenue'] = Payment.objects.filter(
-            status='captured'
+            status='COMPLETED'
         ).aggregate(total=Sum('amount_paid'))['total'] or 0
         
         context['monthly_revenue'] = Payment.objects.filter(
-            status='captured',
+            status='COMPLETED',
             created_at__date__gte=thirty_days_ago
         ).aggregate(total=Sum('amount_paid'))['total'] or 0
         
@@ -44,7 +44,10 @@ class ReportingDashboardView(LoginRequiredMixin, AdminRequiredMixin, TemplateVie
         context['total_orders'] = Order.objects.filter(is_deleted=False).count()
         context['pending_orders'] = Order.objects.filter(
             is_deleted=False,
-            current_status__status_name__in=['pending', 'confirmed', 'stitching']
+            current_status__status_name__in=[
+                'booked', 'fabric_allocated', 'stitching', 
+                'trial_scheduled', 'alteration', 'ready'
+            ]
         ).count()
         
         context['completed_orders'] = Order.objects.filter(
@@ -96,7 +99,7 @@ class RevenueReportView(LoginRequiredMixin, AdminRequiredMixin, TemplateView):
         from django.db.models.functions import TruncMonth
         
         monthly_data = Payment.objects.filter(
-            status='captured',
+            status='COMPLETED',
             created_at__date__gte=timezone.now().date() - timedelta(days=365)
         ).annotate(
             month=TruncMonth('created_at')
@@ -150,14 +153,16 @@ class ExportRevenueCSVView(LoginRequiredMixin, AdminRequiredMixin, View):
         writer.writerow(['Date', 'Order Number', 'Customer', 'Amount', 'Payment Mode'])
         
         payments = Payment.objects.filter(
-            status='captured'
-        ).select_related('bill__order__customer__user').order_by('-created_at')
+            status='COMPLETED'
+        ).select_related('invoice__bill__order__customer__user').order_by('-created_at')
         
         for p in payments[:1000]:  # Limit to 1000 rows
+            # Traverse invoice -> bill -> order
+            order = p.invoice.bill.order if (p.invoice and p.invoice.bill) else None
             writer.writerow([
                 p.created_at.strftime('%Y-%m-%d %H:%M'),
-                p.bill.order.order_number if p.bill else '-',
-                p.bill.order.customer.user.get_full_name() if p.bill else '-',
+                order.order_number if order else '-',
+                order.customer.user.get_full_name() if order else '-',
                 p.amount_paid,
                 p.payment_mode.mode_name if p.payment_mode else '-'
             ])

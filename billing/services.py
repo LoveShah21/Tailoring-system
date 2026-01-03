@@ -89,7 +89,7 @@ class BillingService:
             due_date=timezone.now().date() + timezone.timedelta(days=due_days),
             customer_name=customer.get_full_name() or customer.username,
             customer_email=customer.email,
-            customer_phone=order.customer.phone or '',
+            customer_phone=order.customer.phone_number or '',
             status='ISSUED',
             generated_by=generated_by,
             issued_at=timezone.now(),
@@ -160,26 +160,26 @@ class BillingService:
         
         # Line items
         items_data = [
-            ['Description', 'Amount (₹)'],
-            ['Base Garment Price', f'{bill.base_garment_price:,.2f}'],
+            ['Description', 'Amount (Rs)'],
+            ['Base Garment Price', f'Rs {bill.base_garment_price:,.2f}'],
         ]
         
         if bill.work_type_charges > 0:
-            items_data.append(['Work Type Charges', f'{bill.work_type_charges:,.2f}'])
+            items_data.append(['Work Type Charges', f'Rs {bill.work_type_charges:,.2f}'])
         
         if bill.alteration_charges > 0:
-            items_data.append(['Alteration Charges', f'{bill.alteration_charges:,.2f}'])
+            items_data.append(['Alteration Charges', f'Rs {bill.alteration_charges:,.2f}'])
         
         if bill.urgency_surcharge > 0:
-            items_data.append(['Urgency Surcharge', f'{bill.urgency_surcharge:,.2f}'])
+            items_data.append(['Urgency Surcharge', f'Rs {bill.urgency_surcharge:,.2f}'])
         
-        items_data.append(['Subtotal', f'{bill.subtotal:,.2f}'])
-        items_data.append([f'Tax ({bill.tax_rate}%)', f'{bill.tax_amount:,.2f}'])
-        items_data.append(['Total', f'{bill.total_amount:,.2f}'])
+        items_data.append(['Subtotal', f'Rs {bill.subtotal:,.2f}'])
+        items_data.append([f'Tax ({bill.tax_rate}%)', f'Rs {bill.tax_amount:,.2f}'])
+        items_data.append(['Total', f'Rs {bill.total_amount:,.2f}'])
         
         if bill.advance_amount > 0:
-            items_data.append(['Less: Advance Paid', f'-{bill.advance_amount:,.2f}'])
-            items_data.append(['Balance Due', f'{bill.balance_amount:,.2f}'])
+            items_data.append(['Less: Advance Paid', f'- Rs {bill.advance_amount:,.2f}'])
+            items_data.append(['Balance Due', f'Rs {bill.balance_amount:,.2f}'])
         
         items_table = Table(items_data, colWidths=[4*inch, 2*inch])
         items_table.setStyle(TableStyle([

@@ -41,6 +41,7 @@ class EmailService:
         from_email: Optional[str] = None,
         cc: Optional[List[str]] = None,
         bcc: Optional[List[str]] = None,
+        attachments: Optional[List[tuple]] = None,
         max_retries: int = MAX_RETRIES
     ) -> bool:
         """
@@ -54,6 +55,7 @@ class EmailService:
             from_email: Optional from address (uses DEFAULT_FROM_EMAIL if not provided)
             cc: Optional CC list
             bcc: Optional BCC list
+            attachments: Optional list of (filename, content, mimetype) tuples
             max_retries: Maximum retry attempts
         
         Returns:
@@ -85,6 +87,10 @@ class EmailService:
                 
                 if html_content:
                     email.attach_alternative(html_content, "text/html")
+                
+                if attachments:
+                    for filename, content, mimetype in attachments:
+                        email.attach(filename, content, mimetype)
                 
                 email.send(fail_silently=False)
                 
@@ -138,11 +144,21 @@ class EmailService:
             'balance_due': invoice.get_balance_due(),
         }
         
+        # Generate Invoice PDF
+        try:
+            from billing.services import BillingService
+            pdf_buffer = BillingService.generate_invoice_pdf(invoice)
+            attachments = [(f'{invoice.invoice_number}.pdf', pdf_buffer.read(), 'application/pdf')]
+        except Exception as e:
+            logger.error(f"Failed to attach invoice PDF for payment {payment.id}: {e}")
+            attachments = None
+            
         return cls.send_email(
             to_email=invoice.customer_email,
             subject=f'Payment Received - {invoice.invoice_number}',
             template_name='payment_success',
-            context=context
+            context=context,
+            attachments=attachments
         )
     
     @classmethod

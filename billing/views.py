@@ -108,6 +108,14 @@ class DownloadInvoicePDFView(LoginRequiredMixin, View):
     def get(self, request, pk):
         invoice = get_object_or_404(Invoice, pk=pk)
         
+        # Security check: User must be staff OR the customer who owns the invoice
+        is_staff = request.user.is_staff
+        is_owner = (invoice.customer_email == request.user.email)
+        
+        if not (is_staff or is_owner):
+            messages.error(request, "You do not have permission to view this invoice.")
+            return redirect('dashboard:home')
+        
         try:
             pdf_content = BillingService.generate_invoice_pdf(invoice)
             response = HttpResponse(pdf_content, content_type='application/pdf')
@@ -115,7 +123,7 @@ class DownloadInvoicePDFView(LoginRequiredMixin, View):
             return response
         except Exception as e:
             messages.error(request, f'Error generating PDF: {str(e)}')
-            return redirect('billing:bill_detail', pk=invoice.bill.pk)
+            return redirect('dashboard:home') if not is_staff else redirect('billing:bill_detail', pk=invoice.bill.pk)
 
 
 class InvoiceListView(LoginRequiredMixin, StaffRequiredMixin, ListView):

@@ -121,6 +121,42 @@
         </div>
         {% endif %}
 
+        <!-- Material Allocations -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-box-seam"></i> Material Allocations</h6>
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#allocateModal">
+                    <i class="bi bi-plus"></i> Allocate
+                </button>
+            </div>
+            <div class="card-body">
+                {% if allocations %}
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Fabric</th>
+                            <th>Quantity</th>
+                            <th>Cost</th>
+                            <th>Allocated By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alloc in allocations %}
+                        <tr>
+                            <td>{{ alloc.fabric.name }} ({{ alloc.fabric.color }})</td>
+                            <td>{{ alloc.quantity_meters }}m</td>
+                            <td>₹{{ alloc.get_total_cost }}</td>
+                            <td>{{ alloc.allocated_by.get_full_name|default:alloc.allocated_by.username }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-muted mb-0">No material allocated yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
         <!-- Assignments -->
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -281,6 +317,38 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Assign</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Allocate Modal -->
+<div class="modal fade" id="allocateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'orders:order_allocate' order.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Allocate Material</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Fabric</label>
+                        {{ allocation_form.fabric }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity</label>
+                         <div class="input-group">
+                            {{ allocation_form.quantity }}
+                            <span class="input-group-text">meters</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Allocate</button>
                 </div>
             </form>
         </div>

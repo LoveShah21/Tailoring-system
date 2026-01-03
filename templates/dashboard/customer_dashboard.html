@@ -73,17 +73,31 @@
                                 <th>Garment</th>
                                 <th>Status</th>
                                 <th>Date</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for order in recent_orders %}
                             <tr>
-                                <td>{{ order.order_number }}</td>
+                                <td>
+                                    <a href="{% url 'orders:customer_order_detail' order.pk %}" class="text-decoration-none fw-bold">
+                                        {{ order.order_number }}
+                                    </a>
+                                </td>
                                 <td>{{ order.garment_type.name }}</td>
                                 <td>
                                     <span class="badge bg-secondary">{{ order.current_status.display_label }}</span>
                                 </td>
                                 <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if order.bill and order.bill.invoice and not order.bill.invoice.is_fully_paid %}
+                                        <button class="btn btn-sm btn-primary pay-now-btn" 
+                                                data-bill-id="{{ order.bill.pk }}"
+                                                data-amount="{{ order.bill.invoice.get_balance_due|floatformat:2 }}">
+                                            Pay Now (₹{{ order.bill.invoice.get_balance_due|floatformat:0 }})
+                                        </button>
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -111,4 +125,77 @@
         </div>
     </div>
 </div>
+
+<!-- Razorpay Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const payBtns = document.querySelectorAll('.pay-now-btn');
+    
+    payBtns.forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const billId = this.dataset.billId;
+            const amount = this.dataset.amount;
+            
+            try {
+                // 1. Create Order
+                const response = await fetch(`/payments/create/${billId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `amount=${amount}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                // 2. Open Razorpay
+                const options = {
+                    "key": data.key,
+                    "amount": data.amount,
+                    "currency": data.currency,
+                    "name": "Tailoring System",
+                    "description": "Bill Payment",
+                    "order_id": data.order_id,
+                    "handler": async function (response){
+                        // 3. Verify Payment
+                        const verifyResp = await fetch('/payments/verify/', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}',
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `razorpay_payment_id=${response.razorpay_payment_id}&razorpay_order_id=${response.razorpay_order_id}&razorpay_signature=${response.razorpay_signature}`
+                        });
+                        
+                        const verifyData = await verifyResp.json();
+                        if (verifyData.success) {
+                            alert('Payment successful!');
+                            location.reload();
+                        } else {
+                            window.location.href = `/payments/failed/?error=${encodeURIComponent(verifyData.error)}`;
+                        }
+                    },
+                    "theme": {
+                        "color": "#3399cc"
+                    }
+                };
+                
+                const rzp1 = new Razorpay(options);
+                rzp1.open();
+                
+            } catch (err) {
+                console.error(err);
+                alert('Something went wrong. Please try again.');
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

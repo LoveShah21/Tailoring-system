@@ -100,6 +100,15 @@ class OrderService:
                 request=request
             )
         
+        # Generate Bill and Invoice
+        from billing.services import BillingService
+        bill = BillingService.generate_bill(order)
+        BillingService.generate_invoice(bill, generated_by=created_by or customer.user)
+        
+        # Send notification
+        from notifications.services import NotificationService
+        NotificationService.notify_order_created(order)
+        
         return order
     
     @staticmethod
@@ -156,6 +165,10 @@ class OrderService:
             reason=reason,
             request=request
         )
+        
+        # Send notification
+        from notifications.services import NotificationService
+        NotificationService.notify_order_status_change(order, old_status, new_status)
         
         return order
     

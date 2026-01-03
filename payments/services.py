@@ -14,7 +14,6 @@ from django.utils import timezone
 
 from .models import RazorpayOrder, Payment, Refund, WebhookEvent, PaymentMode
 from audit.services import AuditService
-from notifications.email_service import EmailService
 
 logger = logging.getLogger('tailoring')
 
@@ -138,7 +137,8 @@ class PaymentService:
         cls._update_invoice_status(rp_order.invoice)
         
         # Send confirmation email
-        EmailService.send_payment_success(payment)
+        from notifications.services import NotificationService
+        NotificationService.notify_payment_success(payment)
         
         # Audit log
         AuditService.log_payment(

@@ -151,4 +151,27 @@ class OrderAssignmentForm(forms.Form):
         ).exclude(
             user_roles__role__name='customer'
         )
-        self.fields['staff'].label_from_instance = lambda u: u.get_full_name() or u.username
+class OrderMaterialAllocationForm(forms.Form):
+    """Form for allocating material to an order."""
+    
+    fabric = forms.ModelChoiceField(
+        queryset=None,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label='Fabric'
+    )
+    quantity = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        label='Quantity (meters)'
+    )
+    
+    def __init__(self, *args, **kwargs):
+        from inventory.models import Fabric
+        super().__init__(*args, **kwargs)
+        
+        self.fields['fabric'].queryset = Fabric.objects.filter(
+            is_deleted=False,
+            quantity_in_stock__gt=0
+        )
+        self.fields['fabric'].label_from_instance = lambda f: f"{f.name} ({f.color}) - Available: {f.quantity_in_stock}m"

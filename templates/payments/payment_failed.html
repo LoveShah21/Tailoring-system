@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Failed - Tailoring Management System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="card shadow-sm border-danger">
+                <div class="card-body p-5">
+                    <i class="bi bi-x-circle text-danger display-1 mb-4"></i>
+                    <h2 class="card-title text-danger mb-3">Payment Failed</h2>
+                    <p class="card-text lead mb-4">
+                        We were unable to process your payment. 
+                        {% if error_message %}
+                        <br><small class="text-muted">{{ error_message }}</small>
+                        {% endif %}
+                    </p>
+                    
+                    <div class="d-grid gap-2 col-8 mx-auto">
+                        <a href="{% url 'dashboard:home' %}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-arrow-repeat"></i> Try Again
+                        </a>
+                        <a href="{% url 'dashboard:home' %}" class="btn btn-outline-secondary">
+                            Return to Dashboard
+                        </a>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <p class="small text-muted">
+                            If the problem persists, please contact support with your order details.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

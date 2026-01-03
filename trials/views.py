@@ -74,8 +74,13 @@ class TrialCreateView(LoginRequiredMixin, StaffRequiredMixin, CreateView):
     
     def form_valid(self, form):
         form.instance.scheduled_by = self.request.user
+        response = super().form_valid(form)
+        
+        from notifications.services import NotificationService
+        NotificationService.notify_trial_scheduled(self.object)
+        
         messages.success(self.request, 'Trial scheduled successfully.')
-        return super().form_valid(form)
+        return response
     
     def get_success_url(self):
         return reverse_lazy('trials:trial_detail', kwargs={'pk': self.object.pk})
