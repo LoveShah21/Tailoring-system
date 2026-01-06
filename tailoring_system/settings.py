@@ -9,6 +9,10 @@ import os
 from pathlib import Path
 from decouple import config, Csv
 
+# Use PyMySQL as MySQLdb replacement (easier installation, no compilation required)
+import pymysql
+pymysql.install_as_MySQLdb()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 

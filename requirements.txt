@@ -1,6 +1,6 @@
 # Django Core
 Django>=5.0,<6.0
-mysqlclient>=2.2.0
+PyMySQL>=1.1.0
 
 # Environment & Configuration
 python-dotenv>=1.0.0
