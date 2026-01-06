@@ -94,6 +94,68 @@
             </div>
         </div>
 
+        <!-- Billing & Payment Info (Admin/Staff only) -->
+        {% if user.is_superuser or 'admin' in user_roles or 'staff' in user_roles %}
+        <div class="card mb-4">
+            <div class="card-header bg-{% if is_paid %}success{% else %}warning{% endif %} {% if is_paid %}text-white{% endif %}">
+                <h6 class="mb-0">
+                    <i class="bi bi-credit-card"></i> Billing & Payment
+                    {% if is_paid %}
+                    <span class="badge bg-light text-success ms-2">PAID</span>
+                    {% else %}
+                    <span class="badge bg-danger ms-2">UNPAID</span>
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <th>Total Amount</th>
+                                <td class="fw-bold fs-5">₹{{ bill.total_amount|default:"N/A" }}</td>
+                            </tr>
+                            {% if invoice %}
+                            <tr>
+                                <th>Invoice #</th>
+                                <td>{{ invoice.invoice_number }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        {% if is_paid %}
+                        <div class="alert alert-success mb-0">
+                            <i class="bi bi-check-circle"></i> Payment received on {{ payment.created_at|date:"M d, Y" }}
+                            <br><small>Amount: ₹{{ payment.amount_paid }}</small>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning mb-2">
+                            <i class="bi bi-exclamation-triangle"></i> Customer has not made payment yet.
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <form method="post" action="{% url 'orders:send_payment_reminder' order.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="bi bi-envelope"></i> Send Payment Reminder
+                                </button>
+                            </form>
+                            {% if user.is_superuser or 'admin' in user_roles %}
+                            <form method="post" action="{% url 'orders:record_cash_payment' order.pk %}" onsubmit="return confirm('Record cash payment of ₹{{ bill.total_amount }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-cash"></i> Record Cash Payment
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Work Types -->
         {% if work_types %}
         <div class="card mb-4">
@@ -121,13 +183,16 @@
         </div>
         {% endif %}
 
-        <!-- Material Allocations -->
+        <!-- Material Allocations - visible to admin, staff, tailor, designer -->
+        {% if user.is_superuser or 'admin' in user_roles or 'staff' in user_roles or 'tailor' in user_roles or 'designer' in user_roles %}
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0"><i class="bi bi-box-seam"></i> Material Allocations</h6>
+                {% if user.is_superuser or 'admin' in user_roles or 'staff' in user_roles or 'designer' in user_roles %}
                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#allocateModal">
                     <i class="bi bi-plus"></i> Allocate
                 </button>
+                {% endif %}
             </div>
             <div class="card-body">
                 {% if allocations %}
@@ -156,14 +221,17 @@
                 {% endif %}
             </div>
         </div>
+        {% endif %}
 
         <!-- Assignments -->
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0"><i class="bi bi-people"></i> Staff Assignments</h6>
+                {% if user.is_superuser or 'admin' in user_roles or 'staff' in user_roles %}
                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#assignModal">
                     <i class="bi bi-plus"></i> Assign
                 </button>
+                {% endif %}
             </div>
             <div class="card-body">
                 {% if assignments %}

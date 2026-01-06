@@ -132,7 +132,7 @@ class OrderService:
         """
         old_status = order.current_status
         
-        # Validate transition
+        # Validate transition exists
         valid = OrderStatusTransition.objects.filter(
             from_status=old_status,
             to_status=new_status
@@ -142,6 +142,58 @@ class OrderService:
             raise InvalidTransitionError(
                 f'Cannot transition from "{old_status.display_label}" to "{new_status.display_label}"'
             )
+        
+        # Role-based transition restrictions
+        user_roles = list(changed_by.get_roles().values_list('name', flat=True))
+        from_name = old_status.status_name
+        to_name = new_status.status_name
+        
+        # Admin can do anything
+        if 'admin' not in user_roles and not changed_by.is_superuser:
+            allowed = False
+            
+            # Tailor: fabric_allocated→stitching, stitching→trial_scheduled/ready, trial_scheduled→ready, alteration→ready
+            if 'tailor' in user_roles:
+                tailor_allowed = [
+                    ('fabric_allocated', 'stitching'),
+                    ('stitching', 'trial_scheduled'),
+                    ('stitching', 'ready'),
+                    ('trial_scheduled', 'ready'),
+                    ('alteration', 'ready'),
+                ]
+                if (from_name, to_name) in tailor_allowed:
+                    allowed = True
+            
+            # Designer: booked→fabric_allocated
+            if 'designer' in user_roles:
+                if (from_name, to_name) == ('booked', 'fabric_allocated'):
+                    allowed = True
+            
+            # Delivery: ready→delivered
+            if 'delivery' in user_roles:
+                if (from_name, to_name) == ('ready', 'delivered'):
+                    allowed = True
+            
+            # Staff can do same as admin
+            if 'staff' in user_roles:
+                allowed = True
+            
+            if not allowed:
+                raise InvalidTransitionError(
+                    f'Your role does not allow changing status from "{old_status.display_label}" to "{new_status.display_label}"'
+                )
+        
+        # Check payment for delivered status
+        if to_name == 'delivered':
+            from payments.models import Payment
+            has_payment = Payment.objects.filter(
+                invoice__bill__order=order,
+                status='COMPLETED'
+            ).exists()
+            if not has_payment:
+                raise InvalidTransitionError(
+                    'Cannot mark as delivered: Order has no completed payment. Customer must pay before delivery.'
+                )
         
         # Update order status
         order.current_status = new_status

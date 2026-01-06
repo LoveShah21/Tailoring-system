@@ -134,8 +134,8 @@ class AdminRequiredMixin(RoleRequiredMixin):
 
 
 class StaffRequiredMixin(RoleRequiredMixin):
-    """Mixin that requires admin or staff role."""
-    required_roles = ['admin', 'staff']
+    """Mixin that requires admin, staff, or assigned worker roles."""
+    required_roles = ['admin', 'staff', 'tailor', 'designer', 'delivery']
 
 
 class TailorRequiredMixin(RoleRequiredMixin):

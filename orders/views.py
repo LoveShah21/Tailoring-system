@@ -112,6 +112,27 @@ class OrderDetailView(LoginRequiredMixin, StaffRequiredMixin, DetailView):
         context['assignment_form'] = OrderAssignmentForm()
         context['allocation_form'] = OrderMaterialAllocationForm()
         
+        # User roles for template permission checks
+        context['user_roles'] = list(self.request.user.get_roles().values_list('name', flat=True))
+        
+        # Billing and payment info
+        bill = getattr(order, 'bill', None)
+        context['bill'] = bill
+        if bill:
+            context['invoice'] = getattr(bill, 'invoice', None)
+            # Check if payment exists
+            from payments.models import Payment
+            payment = Payment.objects.filter(
+                invoice__bill__order=order,
+                status='COMPLETED'
+            ).first()
+            context['payment'] = payment
+            context['is_paid'] = payment is not None
+        else:
+            context['invoice'] = None
+            context['payment'] = None
+            context['is_paid'] = False
+        
         return context
 
 
@@ -323,3 +344,96 @@ class CustomerOrderDetailView(LoginRequiredMixin, DetailView):
         context['work_types'] = order.order_work_types.select_related('work_type')
         
         return context
+
+
+class SendPaymentReminderView(LoginRequiredMixin, StaffRequiredMixin, View):
+    """Send payment reminder email to customer."""
+    
+    def post(self, request, pk):
+        from notifications.email_service import EmailService
+        
+        order = get_object_or_404(Order, pk=pk, is_deleted=False)
+        
+        # Get customer email
+        customer_email = order.customer.user.email
+        customer_name = order.customer.user.get_full_name() or order.customer.user.username
+        
+        # Get bill amount
+        bill = getattr(order, 'bill', None)
+        amount = bill.total_amount if bill else 'N/A'
+        
+        # Send reminder email
+        try:
+            EmailService.send_email(
+                to_email=customer_email,
+                subject=f'Payment Reminder - Order {order.order_number}',
+                template_name='payment_reminder',
+                context={
+                    'customer_name': customer_name,
+                    'order_number': order.order_number,
+                    'amount': amount,
+                    'order_id': order.id,
+                }
+            )
+            messages.success(request, f'Payment reminder sent to {customer_email}')
+        except Exception as e:
+            messages.error(request, f'Failed to send reminder: {str(e)}')
+        
+        return redirect('orders:order_detail', pk=pk)
+
+
+class RecordCashPaymentView(LoginRequiredMixin, StaffRequiredMixin, View):
+    """Record a cash payment for an order (Admin only)."""
+    
+    def post(self, request, pk):
+        from payments.models import Payment
+        from billing.models import Invoice
+        
+        order = get_object_or_404(Order, pk=pk, is_deleted=False)
+        
+        # Check if user is admin
+        user_roles = list(request.user.get_roles().values_list('name', flat=True))
+        if 'admin' not in user_roles and not request.user.is_superuser:
+            messages.error(request, 'Only admin can record cash payments.')
+            return redirect('orders:order_detail', pk=pk)
+        
+        # Check if bill exists
+        bill = getattr(order, 'bill', None)
+        if not bill:
+            messages.error(request, 'No bill found for this order. Generate a bill first.')
+            return redirect('orders:order_detail', pk=pk)
+        
+        # Check if invoice exists
+        invoice = getattr(bill, 'invoice', None)
+        if not invoice:
+            messages.error(request, 'No invoice found for this order. Generate an invoice first.')
+            return redirect('orders:order_detail', pk=pk)
+        
+        # Check if payment already exists
+        existing_payment = Payment.objects.filter(
+            invoice=invoice,
+            status='COMPLETED'
+        ).exists()
+        
+        if existing_payment:
+            messages.warning(request, 'Payment already recorded for this order.')
+            return redirect('orders:order_detail', pk=pk)
+        
+        # Record cash payment
+        from payments.models import PaymentMode
+        cash_mode = PaymentMode.objects.filter(mode_name__iexact='cash').first()
+        if not cash_mode:
+            # Create cash mode if it doesn't exist
+            cash_mode = PaymentMode.objects.create(mode_name='cash', description='Cash Payment')
+        
+        Payment.objects.create(
+            invoice=invoice,
+            payment_mode=cash_mode,
+            amount_paid=bill.total_amount,
+            status='COMPLETED',
+            recorded_by=request.user,
+            notes='Cash payment recorded by admin'
+        )
+        
+        messages.success(request, f'Cash payment of ₹{bill.total_amount} recorded successfully.')
+        return redirect('orders:order_detail', pk=pk)

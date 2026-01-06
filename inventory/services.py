@@ -183,16 +183,18 @@ class InventoryService:
     
     @staticmethod
     def _check_low_stock_alert(fabric):
-        """Check and create low stock alert if needed."""
+        """Check and create/update low stock alert if needed."""
         if fabric.quantity_in_stock <= fabric.reorder_threshold:
-            # Check if unresolved alert exists
-            existing = LowStockAlert.objects.filter(
+            # Use get_or_create to handle OneToOneField constraint
+            alert, created = LowStockAlert.objects.get_or_create(
                 fabric=fabric,
-                is_resolved=False
-            ).first()
-            
-            if not existing:
-                LowStockAlert.objects.create(fabric=fabric)
+                defaults={'is_resolved': False}
+            )
+            # If alert existed but was resolved, reactivate it
+            if not created and alert.is_resolved:
+                alert.is_resolved = False
+                alert.resolved_at = None
+                alert.save()
     
     @staticmethod
     def get_low_stock_fabrics():

@@ -23,4 +23,8 @@ urlpatterns = [
     # AJAX APIs
     path('api/measurements/<int:customer_id>/', views.OrderMeasurementsAPI.as_view(), name='api_measurements'),
     path('api/work-types/<int:garment_type_id>/', views.OrderWorkTypesAPI.as_view(), name='api_work_types'),
+    
+    # Payment reminder
+    path('<int:pk>/send-payment-reminder/', views.SendPaymentReminderView.as_view(), name='send_payment_reminder'),
+    path('<int:pk>/record-cash-payment/', views.RecordCashPaymentView.as_view(), name='record_cash_payment'),
 ]

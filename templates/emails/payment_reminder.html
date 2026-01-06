@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #ffc107; color: #333; padding: 15px; text-align: center; }
+        .content { padding: 20px; background-color: #f8f9fa; }
+        .amount { font-size: 24px; font-weight: bold; color: #dc3545; }
+        .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #666; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        td { padding: 10px; border: 1px solid #ddd; }
+        th { padding: 10px; border: 1px solid #ddd; background-color: #f5f5f5; text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>⚠️ Payment Reminder</h2>
+        </div>
+        <div class="content">
+            <p>Dear {{ customer_name }},</p>
+
+            <p>This is a friendly reminder that you have a <strong>pending payment</strong> for your order.</p>
+
+            <table>
+                <tr>
+                    <th>Order Number</th>
+                    <td>{{ order_number }}</td>
+                </tr>
+                <tr>
+                    <th>Amount Due</th>
+                    <td class="amount">₹{{ amount }}</td>
+                </tr>
+            </table>
+
+            <p>Please complete your payment at your earliest convenience to avoid any delays in the delivery of your order.</p>
+
+            <p>If you have already made the payment, please disregard this email.</p>
+
+            <p>Thank you for choosing our tailoring services!</p>
+
+            <p>Best regards,<br>
+            <strong>Tailoring Management System</strong></p>
+        </div>
+        <div class="footer">
+            <p>&copy; {% now "Y" %} Tailoring Management System. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

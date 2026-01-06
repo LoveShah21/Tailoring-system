@@ -51,11 +51,12 @@ def home(request):
             current_status__status_name='ready'
         ).count()
         
-        # Monthly revenue
-        month_start = today.replace(day=1)
+        # Monthly revenue - use datetime to avoid timezone issues with __date
+        from datetime import datetime
+        month_start_dt = datetime(today.year, today.month, 1)
         monthly_revenue = Payment.objects.filter(
             status='COMPLETED',
-            created_at__date__gte=month_start
+            created_at__gte=month_start_dt
         ).aggregate(total=Sum('amount_paid'))['total'] or 0
         
         # Recent orders
