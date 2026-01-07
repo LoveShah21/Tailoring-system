@@ -15,7 +15,7 @@ This document provides a comprehensive overview of the Tailoring Management Syst
 
 ```mermaid
 erDiagram
-    %% User & Authentication
+    %% User and Authentication
     USER ||--o{ USER_ROLE : has
     USER_ROLE }o--|| ROLE : references
     ROLE ||--o{ ROLE_PERMISSION : has
@@ -41,7 +41,7 @@ erDiagram
     %% Designs
     DESIGN ||--o{ CUSTOMIZATION_NOTE : has
     
-    %% Orders - Central Entity
+    %% Orders Central Entity
     ORDER }o--|| CUSTOMER_PROFILE : placed_by
     ORDER }o--|| GARMENT_TYPE : for
     ORDER }o--o| MEASUREMENT_SET : uses
@@ -56,15 +56,14 @@ erDiagram
     ORDER ||--o| DELIVERY : scheduled_for
     ORDER ||--o| FEEDBACK : receives
     
-    %% Order Status
-    ORDER_STATUS ||--o{ ORDER_STATUS_TRANSITION : from
-    ORDER_STATUS ||--o{ ORDER_STATUS_TRANSITION : to
+    %% Order Status Transitions
+    ORDER_STATUS ||--o{ ORDER_STATUS_TRANSITION : allows
     
-    %% Trials & Alterations
+    %% Trials and Alterations
     TRIAL ||--o{ ALTERATION : requires
     ORDER ||--o| REVISED_DELIVERY_DATE : may_have
     
-    %% Billing & Payments
+    %% Billing and Payments
     ORDER_BILL ||--|| INVOICE : generates
     INVOICE ||--o{ PAYMENT : receives
     INVOICE ||--o{ RAZORPAY_ORDER : creates
@@ -87,9 +86,9 @@ erDiagram
     PRICING_RULE }o--o| GARMENT_TYPE : applies_to
     PRICING_RULE }o--o| WORK_TYPE : applies_to
 
-    %% Reporting (Snapshot Tables)
-    MONTHLY_REVENUE
-    PENDING_ORDERS_SNAPSHOT
+    %% Reporting Snapshot Tables
+    MONTHLY_REVENUE {}
+    PENDING_ORDERS_SNAPSHOT {}
     STAFF_WORKLOAD }o--|| USER : for
     INVENTORY_CONSUMPTION }o--|| FABRIC : for
 ```
@@ -218,7 +217,7 @@ erDiagram
         decimal amount_paid
         datetime payment_date
         varchar receipt_reference
-        enum status
+        varchar status
         bigint recorded_by_id FK
         text notes
         datetime created_at
@@ -230,7 +229,7 @@ erDiagram
         varchar refund_reason
         decimal refund_amount
         varchar razorpay_refund_id UK
-        enum refund_status
+        varchar refund_status
         datetime initiated_at
         datetime completed_at
         bigint initiated_by_id FK
@@ -239,17 +238,17 @@ erDiagram
     
     billing_order_bill {
         bigint id PK
-        bigint order_id FK UK
+        bigint order_id UK
         decimal base_garment_price
         decimal work_type_charges
         decimal alteration_charges
         decimal urgency_surcharge
-        decimal subtotal "GENERATED"
+        decimal subtotal
         decimal tax_rate
-        decimal tax_amount "GENERATED"
-        decimal total_amount "GENERATED"
+        decimal tax_amount
+        decimal total_amount
         decimal advance_amount
-        decimal balance_amount "GENERATED"
+        decimal balance_amount
         datetime bill_generated_at
     }
 ```
@@ -275,7 +274,7 @@ erDiagram
     inventory_stock_transaction {
         bigint id PK
         bigint fabric_id FK
-        enum transaction_type
+        varchar transaction_type
         decimal quantity_meters
         decimal previous_quantity
         decimal new_quantity
@@ -287,7 +286,7 @@ erDiagram
     
     inventory_low_stock_alert {
         bigint id PK
-        bigint fabric_id FK UK
+        bigint fabric_id UK
         datetime alert_triggered_at
         boolean is_resolved
         datetime resolved_at
